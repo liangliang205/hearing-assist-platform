@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hearing}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hearing_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-hearing_assist}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  object-storage:
+    image: chrislusf/seaweedfs:latest
+    command: server -dir=/data -s3 -s3.port=9000
+    ports:
+      - "9000:9000"
+      - "9001:9333"
+    volumes:
+      - object-storage-data:/data
+
+volumes:
+  postgres-data:
+  redis-data:
+  object-storage-data:

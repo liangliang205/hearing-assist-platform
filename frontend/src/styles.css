@@ -1,0 +1,38 @@
+:root {
+  font-family: Inter, "Microsoft YaHei", sans-serif;
+  color: #1f2937;
+  background: #f5f7fb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.brand {
+  padding: 20px 16px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  background: #fff;
+}
+
+.topbar h3 {
+  margin: 0;
+}
+
+.content {
+  padding: 24px;
+}

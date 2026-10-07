@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum HearingTestStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum ProcessingStatus {
+  QUEUED
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+enum AiTaskType {
+  SUBTITLE
+  AUDIO_ENHANCE
+}
+
+model User {
+  id              String           @id @default(uuid())
+  username        String           @unique
+  passwordHash    String           @map("password_hash")
+  nickname        String?
+  role            UserRole         @default(USER)
+  status          UserStatus       @default(ACTIVE)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  hearingTests    HearingTest[]
+  hearingProfile  HearingProfile?
+  videos          Video[]
+  aiTasks         AiTask[]
+  evaluations     Evaluation[]
+  @@map("users")
+}
+
+model HearingTest {
+  id          String             @id @default(uuid())
+  userId      String             @map("user_id")
+  status      HearingTestStatus  @default(IN_PROGRESS)
+  deviceNote  String?            @map("device_note")
+  startedAt   DateTime           @default(now()) @map("started_at")
+  finishedAt  DateTime?          @map("finished_at")
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  results     HearingTestResult[]
+  profile     HearingProfile?    @relation("ProfileSourceTest")
+  @@index([userId])
+  @@map("hearing_tests")
+}
+
+model HearingTestResult {
+  id         String      @id @default(uuid())
+  testId     String      @map("test_id")
+  frequency  Int
+  level      Float
+  heard      Boolean
+  createdAt  DateTime    @default(now()) @map("created_at")
+  test       HearingTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  @@index([testId])
+  @@map("hearing_test_results")
+}
+
+model HearingProfile {
+  id          String       @id @default(uuid())
+  userId      String       @unique @map("user_id")
+  configJson  Json         @map("config_json")
+  sourceTestId String?      @unique @map("source_test_id")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceTest  HearingTest? @relation("ProfileSourceTest", fields: [sourceTestId], references: [id])
+  @@map("hearing_profiles")
+}
+
+model Video {
+  id          String       @id @default(uuid())
+  userId      String       @map("user_id")
+  title       String
+  fileKey     String       @map("file_key")
+  duration    Float?
+  status      ProcessingStatus @default(QUEUED)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subtitles   Subtitle[]
+  aiTasks     AiTask[]
+  evaluations Evaluation[]
+  @@index([userId])
+  @@map("videos")
+}
+
+model Subtitle {
+  id          String       @id @default(uuid())
+  videoId     String       @map("video_id")
+  language    String       @default("zh-CN")
+  contentJson Json         @map("content_json")
+  status      ProcessingStatus @default(QUEUED)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  video       Video        @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  @@index([videoId])
+  @@map("subtitles")
+}
+
+model AiTask {
+  id           String       @id @default(uuid())
+  userId       String       @map("user_id")
+  videoId      String       @map("video_id")
+  taskType     AiTaskType   @map("task_type")
+  status       ProcessingStatus @default(QUEUED)
+  progress     Int          @default(0)
+  paramsJson   Json?        @map("params_json")
+  resultKey    String?      @map("result_key")
+  errorMessage String?      @map("error_message")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  finishedAt   DateTime?    @map("finished_at")
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video        Video        @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  evaluations  Evaluation[]
+  @@index([userId, status])
+  @@index([videoId])
+  @@map("ai_tasks")
+}
+
+model Evaluation {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  videoId   String   @map("video_id")
+  aiTaskId  String?  @map("ai_task_id")
+  rating    Int
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  aiTask    AiTask?  @relation(fields: [aiTaskId], references: [id], onDelete: SetNull)
+  @@index([userId])
+  @@index([videoId])
+  @@map("evaluations")
+}

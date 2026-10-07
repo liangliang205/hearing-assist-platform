@@ -1,0 +1,14 @@
+{
+  "name": "hearing-assist-platform",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev:frontend": "pnpm --filter hearing-assist-frontend dev",
+    "dev:backend": "pnpm --filter hearing-assist-backend dev",
+    "dev:ai": "python -m uvicorn app.main:app --reload --app-dir ai-service",
+    "build": "pnpm --filter hearing-assist-frontend build && pnpm --filter hearing-assist-backend build",
+    "typecheck": "pnpm --filter hearing-assist-frontend typecheck && pnpm --filter hearing-assist-backend typecheck",
+    "db:generate": "pnpm --filter hearing-assist-backend db:generate",
+    "db:migrate": "pnpm --filter hearing-assist-backend db:migrate"
+  }
+}
