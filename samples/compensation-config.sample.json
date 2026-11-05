@@ -1,0 +1,198 @@
+{
+  "version": 1,
+  "generatedAt": "2026-11-05T05:33:23.986Z",
+  "ears": {
+    "LEFT": {
+      "ear": "LEFT",
+      "grade": {
+        "key": "mild",
+        "label": "轻度听力损失"
+      },
+      "eqBands": [
+        {
+          "q": 1,
+          "type": "peaking",
+          "gainDb": 5,
+          "frequency": 500
+        },
+        {
+          "q": 1,
+          "type": "peaking",
+          "gainDb": 0,
+          "frequency": 1000
+        },
+        {
+          "q": 1,
+          "type": "peaking",
+          "gainDb": 5,
+          "frequency": 2000
+        },
+        {
+          "q": 1,
+          "type": "peaking",
+          "gainDb": 5,
+          "frequency": 4000
+        }
+      ],
+      "limiter": {
+        "ratio": 20,
+        "attackMs": 3,
+        "releaseMs": 120,
+        "thresholdDb": -3
+      },
+      "ptaDbHl": 25,
+      "audiogram": [
+        {
+          "frequency": 500,
+          "heardCount": 1,
+          "thresholdDbHl": 25,
+          "maxLevelTestedDbHl": 25
+        },
+        {
+          "frequency": 1000,
+          "heardCount": 1,
+          "thresholdDbHl": 20,
+          "maxLevelTestedDbHl": 20
+        },
+        {
+          "frequency": 2000,
+          "heardCount": 1,
+          "thresholdDbHl": 25,
+          "maxLevelTestedDbHl": 25
+        },
+        {
+          "frequency": 4000,
+          "heardCount": 1,
+          "thresholdDbHl": 30,
+          "maxLevelTestedDbHl": 30
+        }
+      ],
+      "preGainDb": 0,
+      "compressor": {
+        "ratio": 2,
+        "kneeDb": 12,
+        "attackMs": 10,
+        "releaseMs": 250,
+        "thresholdDb": -24
+      },
+      "generatedAt": "2026-11-05T05:33:23.831Z",
+      "sourceTestId": "805e9b98-924b-4503-af5d-aad835a955ed"
+    },
+    "RIGHT": {
+      "ear": "RIGHT",
+      "grade": {
+        "key": "moderately_severe",
+        "label": "中重度听力损失"
+      },
+      "eqBands": [
+        {
+          "q": 1,
+          "type": "peaking",
+          "gainDb": 10,
+          "frequency": 250
+        },
+        {
+          "q": 1,
+          "type": "peaking",
+          "gainDb": 20,
+          "frequency": 500
+        },
+        {
+          "q": 1,
+          "type": "peaking",
+          "gainDb": 5,
+          "frequency": 1000
+        },
+        {
+          "q": 1,
+          "type": "peaking",
+          "gainDb": 15,
+          "frequency": 2000
+        },
+        {
+          "q": 1,
+          "type": "peaking",
+          "gainDb": 24,
+          "frequency": 4000
+        },
+        {
+          "q": 1,
+          "type": "peaking",
+          "gainDb": 24,
+          "frequency": 8000
+        }
+      ],
+      "limiter": {
+        "ratio": 20,
+        "attackMs": 3,
+        "releaseMs": 120,
+        "thresholdDb": -3
+      },
+      "ptaDbHl": 52.5,
+      "audiogram": [
+        {
+          "frequency": 250,
+          "heardCount": 1,
+          "thresholdDbHl": 40,
+          "maxLevelTestedDbHl": 40
+        },
+        {
+          "frequency": 500,
+          "heardCount": 1,
+          "thresholdDbHl": 60,
+          "maxLevelTestedDbHl": 60
+        },
+        {
+          "frequency": 1000,
+          "heardCount": 1,
+          "thresholdDbHl": 30,
+          "maxLevelTestedDbHl": 30
+        },
+        {
+          "frequency": 2000,
+          "heardCount": 1,
+          "thresholdDbHl": 50,
+          "maxLevelTestedDbHl": 50
+        },
+        {
+          "frequency": 4000,
+          "heardCount": 1,
+          "thresholdDbHl": 70,
+          "maxLevelTestedDbHl": 70
+        },
+        {
+          "frequency": 8000,
+          "heardCount": 0,
+          "thresholdDbHl": null,
+          "maxLevelTestedDbHl": 90
+        }
+      ],
+      "preGainDb": -6,
+      "compressor": {
+        "ratio": 2,
+        "kneeDb": 12,
+        "attackMs": 10,
+        "releaseMs": 250,
+        "thresholdDb": -24
+      },
+      "generatedAt": "2026-11-05T05:33:23.973Z",
+      "sourceTestId": "b54c00ff-5d15-47a4-87dd-3fb005e9742a"
+    }
+  },
+  "overallGrade": {
+    "key": "mild",
+    "label": "轻度听力损失"
+  },
+  "frequencyLowering": {
+    "enabled": false,
+    "shiftHz": null,
+    "fmin": 1600,
+    "fmax": 8000,
+    "note": "频率搬移/压缩需系统级实时处理，当前版本仅在配置中预留参数，不参与浏览器内处理。"
+  },
+  "notes": [
+    "本结果由网页端纯音自测生成，未做声学校准，仅用于个性化补偿与前后对比，不作为医疗诊断依据。",
+    "补偿增益采用简化半增益规则并按 5 dB 量化，单频上限 24 dB。",
+    "如出现耳鸣、耳痛或明显不适，请立即停止使用并咨询听力专业人员。"
+  ]
+}

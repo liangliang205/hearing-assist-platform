@@ -1,0 +1,850 @@
+FILE: D:\dsh_workspace\项目文档④接口规范.docx
+CORE: title='' author='python-docx' created=2013-12-23 23:15:00+00:00 modified=2013-12-23 23:15:00+00:00
+PARAGRAPHS=185 TABLES=94 SECTIONS=1
+================================================================================
+[Normal] 岭南师范学院  软件工程专业 · 项目文档 ④
+[Normal] 接口（API）规范
+[Normal] 基于 React+TypeScript 与 AI 微服务的听障辅助视频处理及听力自测平台
+<<TABLE 8 rows x 2 cols>>
+| 项目 | 内容 |
+| 文档编号 | DOC-API-004 |
+| 版本 / 日期 | V1.0 / 2026 年 9 月 |
+| 学生 / 学号 | 梁境峰（学号 202308764415） |
+| 专业 / 学院 | 软件工程 / 计算机与智能教育学院 |
+| 指导教师 | 程翔 |
+| 上游文档 | 《软件需求规格说明书》DOC-SRS-001、《系统设计说明书》DOC-SDD-002 |
+| 文档用途 | 定义前后端与 AI 微服务之间的接口契约，作为并行开发、联调与测试的统一依据 |
+
+<<END TABLE>>
+[Normal] 修订记录
+<<TABLE 2 rows x 4 cols>>
+| 版本 | 日期 | 修订内容 | 修订人 |
+| V1.0 | 2026 年 9 月 | 首次发布，定义 MVP 全部接口与错误码 | 梁境峰 |
+
+<<END TABLE>>
+<<TABLE 1 rows x 1 cols>>
+| 契约约定：接口在编码前冻结。开发过程中如需变更，须先更新本文档并记录变更原因，再修改实现，避免前后端与 AI 服务出现契约不一致。 |
+
+<<END TABLE>>
+[Normal] 一、接口总览
+[Normal] 1.1 接口分组
+<<TABLE 10 rows x 4 cols>>
+| 分组 | 接口编号 | 接口数量 | 说明 |
+| 认证与用户 | API-01 ~ API-04 | 4 | 注册、登录、获取与修改当前用户、删除账号 |
+| 听力档案 | API-05 ~ API-08 | 4 | 读取/更新生效配置、配置列表、历史自测记录 |
+| 听力自测 | API-09 ~ API-11 | 3 | 提交自测结果、生成配置、换算增强参数 |
+| 视频管理 | API-12 ~ API-17 | 6 | 上传、列表、详情、播放地址、转码任务、删除 |
+| 任务状态 | API-18 ~ API-19 | 2 | 任务查询与重试 |
+| AI 字幕 | API-20 ~ API-23 | 4 | 字幕详情、分段、VTT/SRT 下载、指标记录 |
+| 音频增强 | API-24 ~ API-25 | 2 | 获取增强配置、提交评分与参数快照 |
+| 实验数据 | API-26 ~ API-27 | 2 | 记录列表与 CSV 导出 |
+| 系统 | API-28 ~ API-30 | 3 | 健康检查、API 文档、任务管理（管理员） |
+
+<<END TABLE>>
+[Normal] 表 1-1  接口分组与编号
+[Normal] 二、通用约定
+[Normal] 2.1 基础约定
+<<TABLE 10 rows x 2 cols>>
+| 项目 | 约定 |
+| 基础路径 | 业务接口统一前缀 /api/v1；AI 微服务内网前缀 /ai/v1（不对外暴露） |
+| 传输协议 | HTTPS（生产）/ HTTP（本地开发）；请求与响应均为 JSON，文件上传使用 multipart/form-data |
+| 字符编码 | UTF-8 |
+| 时间格式 | ISO 8601 带时区，如 2026-09-27T10:30:00+08:00；时长类字段统一使用毫秒整数并以 _ms 结尾 |
+| 命名风格 | 路径使用小写短横线（kebab-case），JSON 字段使用小驼峰（camelCase） |
+| 鉴权方式 | 请求头 Authorization: Bearer <token>；除注册、登录、健康检查外均需鉴权 |
+| 幂等性 | GET 幂等；上传与创建任务通过唯一键或客户端标识保证幂等；删除操作幂等 |
+| 限流 | MVP 不做接口限流；上传接口限制单次文件大小与并发数 |
+| 版本策略 | 路径中携带版本号；破坏性变更升版本，增量字段不升版本 |
+
+<<END TABLE>>
+[Normal] 表 2-1  基础约定
+[Normal] 2.2 统一响应结构
+<<TABLE 1 rows x 1 cols>>
+| // 成功响应 / { / "code": "0", / "message": "ok", / "data": { /* 业务数据，可能是对象、数组或 null */ }, / "traceId": "b1c2d3e4-5f60-7a8b-9c0d-1e2f3a4b5c6d" / } / // 失败响应 / { / "code": "E2001", / "message": "视频上传失败：文件写入存储时发生错误", / "data": null, / "traceId": "b1c2d3e4-5f60-7a8b-9c0d-1e2f3a4b5c6d" / } |
+
+<<END TABLE>>
+[Normal] · code 为字符串，"0" 表示成功，其余为错误码（见第五章）。
+[Normal] · message 为面向用户的中文提示，前端可直接展示；不得包含堆栈、SQL 或内部路径。
+[Normal] · data 在失败时统一为 null；在列表接口中为分页对象。
+[Normal] · traceId 用于日志追踪，前端在报错提示中可作为“错误编号”展示，便于排查。
+[Normal] 2.3 分页与筛选
+<<TABLE 7 rows x 4 cols>>
+| 参数 | 类型 | 默认 | 说明 |
+| page | integer | 1 | 页码，从 1 开始 |
+| pageSize | integer | 20 | 每页条数，最大 100 |
+| keyword | string | — | 模糊搜索关键词（视频标题等） |
+| status | string | — | 按状态筛选，取值依接口而定 |
+| startTime / endTime | string | — | 按时间范围筛选（ISO 8601） |
+| sort | string | createdAt:desc | 排序字段与方向 |
+
+<<END TABLE>>
+<<TABLE 1 rows x 1 cols>>
+| // 列表接口的 data 结构 / { / "code": "0", / "message": "ok", / "data": { / "list": [ /* 记录数组 */ ], / "page": 1, / "pageSize": 20, / "total": 37 / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 表 2-2  分页参数与响应结构
+[Normal] 2.4 通用状态码
+<<TABLE 14 rows x 3 cols>>
+| HTTP 状态码 | 含义 | 使用场景 |
+| 200 | 成功 | 查询、更新、删除成功 |
+| 201 | 已创建 | 注册、上传、创建任务成功 |
+| 202 | 已接受 | 异步任务已入队 |
+| 400 | 请求参数错误 | 参数校验失败、格式不合法 |
+| 401 | 未认证 | 缺少 Token、Token 无效或过期 |
+| 403 | 无权限 | 访问他人资源或需要管理员权限 |
+| 404 | 资源不存在 | 资源 ID 不存在或不属于当前用户 |
+| 409 | 冲突 | 邮箱已存在、重复提交同一任务 |
+| 413 | 请求体过大 | 上传文件超过大小限制 |
+| 415 | 媒体类型不支持 | 上传文件格式不被支持 |
+| 429 | 请求过于频繁 | 预留，MVP 暂不使用 |
+| 500 | 服务内部错误 | 未预期异常 |
+| 503 | 依赖不可用 | 数据库、Redis 或 AI 服务不可用 |
+
+<<END TABLE>>
+[Normal] 表 2-3  HTTP 状态码使用约定
+[Normal] 三、接口详细定义
+[Normal] 3.1 认证与用户接口
+[Normal] API-01  POST /api/v1/auth/register
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-01 |
+| 请求方法 | POST |
+| 请求路径 | /api/v1/auth/register |
+| 是否鉴权 | 否 |
+| 功能说明 | 注册新用户，成功后自动登录并返回 Token |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 4 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| email | string | 是 | 登录邮箱，需符合邮箱格式且未被注册 |
+| password | string | 是 | 密码，不少于 8 位且包含字母与数字 |
+| displayName | string | 是 | 显示名称，1—50 字符 |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", / "message": "ok", / "data": { / "token": "eyJhbGciOiJIUzI1NiIs...", / "expiresIn": 604800, / "user": { "id": 1, "email": "user@example.com", / "displayName": "小明", "role": "user" } / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 错误码：E1002 邮箱已被注册；E1004 密码不符合要求；E9000 服务内部错误
+[Normal] API-02  POST /api/v1/auth/login
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-02 |
+| 请求方法 | POST |
+| 请求路径 | /api/v1/auth/login |
+| 是否鉴权 | 否 |
+| 功能说明 | 账号登录，校验通过后签发 JWT |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 3 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| email | string | 是 | 登录邮箱 |
+| password | string | 是 | 登录密码 |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", / "message": "ok", / "data": { / "token": "eyJhbGciOiJIUzI1NiIs...", / "expiresIn": 604800, / "user": { "id": 1, "email": "user@example.com", / "displayName": "小明", "role": "user" } / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 错误码：E1001 邮箱或密码错误；E1005 账号已停用；E9000 服务内部错误
+[Normal] API-03  GET /api/v1/users/me
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-03 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/users/me |
+| 是否鉴权 | 是 |
+| 功能说明 | 获取当前登录用户的资料与关键状态 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", / "message": "ok", / "data": { / "id": 1, / "email": "user@example.com", / "displayName": "小明", / "role": "user", / "hearingNote": null, / "hasHearingProfile": true, / "videoCount": 6, / "createdAt": "2026-09-27T10:30:00+08:00" / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 错误码：E1003 登录状态已失效
+[Normal] API-04  PATCH /api/v1/users/me
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-04 |
+| 请求方法 | PATCH |
+| 请求路径 | /api/v1/users/me |
+| 是否鉴权 | 是 |
+| 功能说明 | 修改当前用户资料；DELETE 同路径用于删除账号及其全部数据 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 3 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| displayName | string | 否 | 显示名称，1—50 字符 |
+| hearingNote | string | 否 | 听力情况自述，最长 500 字符，可为 null |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| // PATCH /api/v1/users/me / { "code": "0", "message": "ok", / "data": { "id": 1, "displayName": "小明", "hearingNote": "右耳高频较弱" }, / "traceId": "…" } / // DELETE /api/v1/users/me —— 级联清理账号、视频、字幕、听力档案与磁盘文件 / { "code": "0", "message": "ok", "data": { "deleted": true }, "traceId": "…" } |
+
+<<END TABLE>>
+[Normal] 错误码：E1003 登录状态已失效；E9001 数据删除失败
+[Normal] 3.2 听力档案接口
+[Normal] API-05  GET /api/v1/hearing-profiles/current
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-05 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/hearing-profiles/current |
+| 是否鉴权 | 是 |
+| 功能说明 | 获取当前生效的听力配置，供音频增强使用 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", / "message": "ok", / "data": { / "id": 12, / "name": "自测 0912", / "source": "test", / "thresholds": { / "unit": "dB", / "left":  { "500": 10, "1000": 5, "2000": 20, "4000": 40, "8000": 55 }, / "right": { "500": 5,  "1000": 5, "2000": 15, "4000": 35, "8000": 50 } / }, / "isCurrent": true, / "updatedAt": "2026-09-12T21:10:00+08:00" / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 错误码：E5003 尚未生成听力配置
+[Normal] API-06  PUT /api/v1/hearing-profiles/current
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-06 |
+| 请求方法 | PUT |
+| 请求路径 | /api/v1/hearing-profiles/current |
+| 是否鉴权 | 是 |
+| 功能说明 | 更新当前配置（手动微调阈值），或在有多份配置时切换生效配置 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 3 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| profileId | integer | 否 | 要切换为生效的配置 ID；不传表示修改当前配置 |
+| thresholds | object | 否 | 手动调整后的阈值对象，结构同 API-05 响应 |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { "code": "0", "message": "ok", / "data": { "id": 12, "isCurrent": true, "updatedAt": "2026-09-27T10:40:00+08:00" }, / "traceId": "…" } |
+
+<<END TABLE>>
+[Normal] 错误码：E5001 配置保存失败；E5002 配置不存在或不属于当前用户
+[Normal] API-07  GET /api/v1/hearing-profiles
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-07 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/hearing-profiles |
+| 是否鉴权 | 是 |
+| 功能说明 | 分页获取当前用户的全部听力配置 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", "message": "ok", / "data": { / "list": [ / { "id": 12, "name": "自测 0912", "source": "test", "isCurrent": true, / "createdAt": "2026-09-12T21:05:00+08:00" }, / { "id": 9,  "name": "自测 0901", "source": "test", "isCurrent": false, / "createdAt": "2026-09-01T20:30:00+08:00" } / ], / "page": 1, "pageSize": 20, "total": 2 / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] API-08  GET /api/v1/hearing-tests
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-08 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/hearing-tests |
+| 是否鉴权 | 是 |
+| 功能说明 | 分页获取历史自测记录（按会话聚合），用于重复性分析 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 2 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| sessionId | string | 否 | 查看某一次自测的逐频点明细 |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", "message": "ok", / "data": { / "list": [ / { "sessionId": "9f1c…", "testedAt": "2026-09-12T21:00:00+08:00", / "profileId": 12, "deviceInfo": { "platform": "Windows", "headphone": true }, / "items": [ { "frequencyHz": 4000, "ear": "left",  "response": "heard" }, / { "frequencyHz": 8000, "ear": "left",  "response": "not_heard" } ] } / ], / "page": 1, "pageSize": 20, "total": 5 / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 3.3 听力自测接口
+[Normal] API-09  POST /api/v1/hearing-tests
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-09 |
+| 请求方法 | POST |
+| 请求路径 | /api/v1/hearing-tests |
+| 是否鉴权 | 是 |
+| 功能说明 | 提交一次自测的逐频点反馈明细 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 8 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| sessionId | string | 是 | 本次自测会话标识（前端生成 UUID） |
+| deviceInfo | object | 否 | 设备与环境信息，如 { browser, platform, headphone } |
+| items | array | 是 | 反馈明细数组 |
+| items[].frequencyHz | integer | 是 | 测试频点，取值 500/1000/2000/4000/8000 |
+| items[].ear | string | 是 | left 或 right |
+| items[].response | string | 是 | heard / not_heard / unsure |
+| items[].volumeLevel | integer | 否 | 测试时音量档位 0—100 |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { "code": "0", "message": "ok", / "data": { "sessionId": "9f1c…", "savedItems": 10 }, / "traceId": "…" } |
+
+<<END TABLE>>
+[Normal] 错误码：E6001 自测数据不完整或格式错误；E5001 保存失败
+[Normal] API-10  POST /api/v1/hearing-profiles/generate
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-10 |
+| 请求方法 | POST |
+| 请求路径 | /api/v1/hearing-profiles/generate |
+| 是否鉴权 | 是 |
+| 功能说明 | 依据某次自测结果生成听力配置，并可选设为生效配置 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 4 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| sessionId | string | 是 | 自测会话标识 |
+| name | string | 否 | 配置名称，默认按日期生成 |
+| setCurrent | boolean | 否 | 是否设为生效配置，默认 true |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", "message": "ok", / "data": { / "id": 12, "name": "自测 0912", "source": "test", "isCurrent": true, / "thresholds": { "unit": "dB", / "left":  { "500": 10, "1000": 5, "2000": 20, "4000": 40, "8000": 55 }, / "right": { "500": 5,  "1000": 5, "2000": 15, "4000": 35, "8000": 50 } }, / "audibleRanges": { "left": [500, 4000], "right": [500, 8000] } / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 错误码：E5001 保存失败；E6002 自测会话不存在
+[Normal] API-11  GET /api/v1/hearing-profiles/:id/enhancement
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-11 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/hearing-profiles/:id/enhancement |
+| 是否鉴权 | 是 |
+| 功能说明 | 由指定听力配置换算音频增强参数（前端可本地计算，此接口用于校验与统一逻辑） |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", "message": "ok", / "data": { / "mode": "realtime", / "filters": { / "lowShelf":  { "freq": 500,  "gainDb": 4 }, / "peaking":   { "freq": 1500, "gainDb": 6, "q": 1.0 }, / "highShelf": { "freq": 3000, "gainDb": 12 } / }, / "compressor": { "threshold": -24, "ratio": 3, "attackMs": 10, "releaseMs": 200 }, / "maxGainDb": 18 / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 错误码：E5002 配置不存在
+[Normal] 3.4 视频管理接口
+[Normal] API-12  POST /api/v1/videos
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-12 |
+| 请求方法 | POST |
+| 请求路径 | /api/v1/videos |
+| 是否鉴权 | 是 |
+| 功能说明 | 上传视频文件（multipart/form-data），成功后自动创建转码任务 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 3 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| file | file | 是 | 视频文件，支持 MP4/MOV/AVI/MKV，单文件不超过 2 GB |
+| title | string | 否 | 视频标题，默认取原文件名 |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| // HTTP 201 / { / "code": "0", "message": "ok", / "data": { / "id": 15, / "title": "讲座录像.mp4", / "status": "uploaded", / "sizeBytes": 104857600, / "transcodeTaskId": 31 / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 错误码：E2003 不支持的文件格式；E2002 文件超过大小限制；E2001 文件写入失败；E3001 任务入队失败
+[Normal] API-13  GET /api/v1/videos
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-13 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/videos |
+| 是否鉴权 | 是 |
+| 功能说明 | 分页获取当前用户的视频列表，支持搜索与状态筛选 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 3 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| keyword | string | 否 | 按标题模糊搜索 |
+| status | string | 否 | uploaded / transcoding / ready / failed |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", "message": "ok", / "data": { / "list": [ / { "id": 15, "title": "讲座录像.mp4", "status": "ready", / "durationMs": 620000, "sizeBytes": 104857600, / "hasSubtitle": true, "reviewStatus": "none", / "createdAt": "2026-09-27T10:30:00+08:00" } / ], / "page": 1, "pageSize": 20, "total": 6 / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] API-14  GET /api/v1/videos/:id
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-14 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/videos/:id |
+| 是否鉴权 | 是 |
+| 功能说明 | 获取视频详情，含任务状态、字幕与增强可用性 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", "message": "ok", / "data": { / "id": 15, "title": "讲座录像.mp4", "status": "ready", / "durationMs": 620000, / "playbackUrl": "/media/videos/9f1c….mp4", / "subtitle": { "id": 8, "language": "zh", "segmentCount": 214, / "vttUrl": "/api/v1/videos/15/subtitle.vtt", / "srtUrl": "/api/v1/videos/15/subtitle.srt" }, / "tasks": [ / { "id": 31, "taskType": "transcode", "status": "succeeded", / "progress": 100, "finishedAt": "2026-09-27T10:32:00+08:00" }, / { "id": 32, "taskType": "subtitle", "status": "succeeded", / "progress": 100, "finishedAt": "2026-09-27T10:39:00+08:00" } / ], / "enhancementAvailable": true / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 错误码：E2004 视频不存在或无权访问
+[Normal] API-15  GET /api/v1/videos/:id/playback
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-15 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/videos/:id/playback |
+| 是否鉴权 | 是 |
+| 功能说明 | 获取播放地址（转码完成后可用） |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { "code": "0", "message": "ok", / "data": { "url": "/media/videos/9f1c….mp4", / "contentType": "video/mp4", "durationMs": 620000 }, / "traceId": "…" } |
+
+<<END TABLE>>
+[Normal] 错误码：E2004 视频不存在；E2005 视频尚未转码完成
+[Normal] API-16  POST /api/v1/videos/:id/transcode
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-16 |
+| 请求方法 | POST |
+| 请求路径 | /api/v1/videos/:id/transcode |
+| 是否鉴权 | 是 |
+| 功能说明 | 手动触发或重试转码任务（幂等：已有进行中任务时返回该任务） |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| // HTTP 202 / { "code": "0", "message": "ok", / "data": { "taskId": 33, "taskType": "transcode", "status": "queued" }, / "traceId": "…" } |
+
+<<END TABLE>>
+[Normal] 错误码：E2004 视频不存在；E3002 任务重试次数已用尽
+[Normal] API-17  DELETE /api/v1/videos/:id
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-17 |
+| 请求方法 | DELETE |
+| 请求路径 | /api/v1/videos/:id |
+| 是否鉴权 | 是 |
+| 功能说明 | 删除视频及其全部派生数据与文件（幂等） |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { "code": "0", "message": "ok", / "data": { "deleted": true, "removedFiles": 4 }, / "traceId": "…" } |
+
+<<END TABLE>>
+[Normal] 错误码：E2004 视频不存在
+[Normal] 注意：删除接口会级联清理 tasks、subtitles、subtitle_segments、enhancement_logs、video_metrics 记录，并删除磁盘上的原始文件、转码产物、音频与字幕文件。删除前前端须二次确认。
+[Normal] 3.5 任务与字幕接口
+[Normal] API-18  GET /api/v1/tasks/:id
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-18 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/tasks/:id |
+| 是否鉴权 | 是 |
+| 功能说明 | 查询任务状态（前端按 2 秒间隔轮询，直到进入终态） |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", "message": "ok", / "data": { / "id": 32, "videoId": 15, "taskType": "subtitle", / "status": "processing", "progress": 45, / "stageText": "识别中（第 3/7 段）", / "retryCount": 0, / "startedAt": "2026-09-27T10:35:00+08:00", / "finishedAt": null, / "error": null / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 错误码：E3003 任务不存在或无权访问
+[Normal] API-19  POST /api/v1/tasks/:id/retry
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-19 |
+| 请求方法 | POST |
+| 请求路径 | /api/v1/tasks/:id/retry |
+| 是否鉴权 | 是 |
+| 功能说明 | 重试失败任务（重试上限 3 次） |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| // HTTP 202 / { "code": "0", "message": "ok", / "data": { "taskId": 32, "status": "queued", "retryCount": 1 }, / "traceId": "…" } |
+
+<<END TABLE>>
+[Normal] 错误码：E3002 任务重试次数已用尽；E3004 任务当前状态不允许重试
+[Normal] API-20  POST /api/v1/videos/:id/subtitle-tasks
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-20 |
+| 请求方法 | POST |
+| 请求路径 | /api/v1/videos/:id/subtitle-tasks |
+| 是否鉴权 | 是 |
+| 功能说明 | 为视频创建字幕生成任务（转码完成后调用；幂等） |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 3 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| language | string | 否 | 字幕语言，默认 zh |
+| modelSize | string | 否 | 模型规格：tiny / base / small，默认取服务端配置 |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| // HTTP 202 / { "code": "0", "message": "ok", / "data": { "taskId": 32, "taskType": "subtitle", "status": "queued" }, / "traceId": "…" } |
+
+<<END TABLE>>
+[Normal] 错误码：E2004 视频不存在；E2005 视频尚未转码完成；E4002 AI 服务不可用；E3001 任务入队失败
+[Normal] API-21  GET /api/v1/videos/:id/subtitle
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-21 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/videos/:id/subtitle |
+| 是否鉴权 | 是 |
+| 功能说明 | 获取视频字幕的整体信息与分段内容 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 2 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| withSegments | boolean | 否 | 是否返回分段数组，默认 false |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", "message": "ok", / "data": { / "id": 8, "language": "zh", "segmentCount": 214, / "modelName": "base", "avgConfidence": 0.9123, / "durationMs": 620000, "isEdited": false, / "segments": [ / { "seq": 1, "startMs": 1200, "endMs": 3800, / "text": "大家好，今天我们来讨论……", "confidence": 0.94 } / ] / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 错误码：E4004 字幕不存在
+[Normal] API-22  GET /api/v1/videos/:id/subtitle.vtt
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-22 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/videos/:id/subtitle.vtt |
+| 是否鉴权 | 是 |
+| 功能说明 | 下载 VTT 字幕文件，用于播放器挂载 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| // Content-Type: text/vtt; charset=utf-8 / WebVTT / 1 / 00:00:01.200 --> 00:00:03.800 / 大家好，今天我们来讨论…… / 2 / 00:00:04.100 --> 00:00:07.600 / 首先是听力辅助的基本背景…… |
+
+<<END TABLE>>
+[Normal] 错误码：E4004 字幕不存在
+[Normal] API-23  GET /api/v1/videos/:id/subtitle.srt
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-23 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/videos/:id/subtitle.srt |
+| 是否鉴权 | 是 |
+| 功能说明 | 下载 SRT 字幕文件，用于本地播放器或存档 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| // Content-Type: application/x-subrip; charset=utf-8 / 1 / 00:00:01,200 --> 00:00:03,800 / 大家好，今天我们来讨论…… / 2 / 00:00:04,100 --> 00:00:07,600 / 首先是听力辅助的基本背景…… |
+
+<<END TABLE>>
+[Normal] 错误码：E4004 字幕不存在
+[Normal] 3.6 音频增强与实验数据接口
+[Normal] API-24  GET /api/v1/videos/:id/enhancement
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-24 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/videos/:id/enhancement |
+| 是否鉴权 | 是 |
+| 功能说明 | 获取该视频可用的增强配置（含听力配置换算结果与默认强度） |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", "message": "ok", / "data": { / "mode": "realtime", / "sourceProfileId": 12, / "defaultIntensity": 60, / "filters": { / "lowShelf":  { "freq": 500,  "gainDb": 4 }, / "peaking":   { "freq": 1500, "gainDb": 6, "q": 1.0 }, / "highShelf": { "freq": 3000, "gainDb": 12 } / }, / "compressor": { "threshold": -24, "ratio": 3, "attackMs": 10, "releaseMs": 200 }, / "maxGainDb": 18, / "supported": true / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 错误码：E1003 登录状态已失效
+[Normal] API-25  POST /api/v1/videos/:id/enhancement-logs
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-25 |
+| 请求方法 | POST |
+| 请求路径 | /api/v1/videos/:id/enhancement-logs |
+| 是否鉴权 | 是 |
+| 功能说明 | 记录一次增强试听的参数快照与主观评分 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 7 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| profileId | integer | 否 | 所用听力配置 ID |
+| mode | string | 是 | realtime（MVP）/ remap（v1.1） |
+| intensity | integer | 是 | 强度百分比 0—100 |
+| configSnapshot | object | 是 | 本次使用的参数快照（filters 与 compressor） |
+| rating | integer | 否 | 主观评分 1—5，未评分可不传 |
+| comment | string | 否 | 主观备注，最长 500 字符 |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| // HTTP 201 / { "code": "0", "message": "ok", / "data": { "id": 88, "rating": 4, "ratedAt": "2026-09-27T11:00:00+08:00" }, / "traceId": "…" } |
+
+<<END TABLE>>
+[Normal] 错误码：E2004 视频不存在；E7001 参数快照格式错误；E7002 评分超出范围
+[Normal] API-26  GET /api/v1/experiments/records
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-26 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/experiments/records |
+| 是否鉴权 | 是 |
+| 功能说明 | 分页查询实验记录（处理耗时、增强参数与评分汇总） |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 4 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| startTime / endTime | string | 否 | 按时间范围筛选 |
+| videoId | integer | 否 | 按视频筛选 |
+| minRating | integer | 否 | 按最低评分筛选 |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", "message": "ok", / "data": { / "list": [ / { "videoId": 15, "videoTitle": "讲座录像.mp4", "durationMs": 620000, / "transcodeMs": 41000, "subtitleMs": 372000, "segmentCount": 214, / "enhancements": [ / { "id": 88, "mode": "realtime", "intensity": 60, "rating": 4, / "configSnapshot": { "highShelf": { "gainDb": 12 } }, / "comment": "高频辅音更清楚了", "ratedAt": "2026-09-27T11:00:00+08:00" } / ] } / ], / "page": 1, "pageSize": 20, "total": 12 / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] API-27  GET /api/v1/experiments/export
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-27 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/experiments/export |
+| 是否鉴权 | 是 |
+| 功能说明 | 导出实验数据为 CSV 文件（用于论文统计与图表） |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 3 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| startTime / endTime | string | 否 | 导出时间范围 |
+| type | string | 否 | records（处理记录）/ ratings（评分记录）/ tests（自测记录） |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| // Content-Type: text/csv; charset=utf-8 / video_id,duration_ms,transcode_ms,subtitle_ms,segment_count,mode,intensity,rating / 15,620000,41000,372000,214,realtime,60,4 / 16,310000,22000,180000,96,realtime,70,5 |
+
+<<END TABLE>>
+[Normal] 错误码：E7003 指定范围内无数据
+[Normal] 3.7 系统接口
+[Normal] API-28  GET /api/v1/health
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-28 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/health |
+| 是否鉴权 | 否 |
+| 功能说明 | 健康检查，返回服务与依赖组件状态 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", "message": "ok", / "data": { / "status": "ok", / "components": { / "database": "ok", / "redis": "ok", / "aiService": "ok", / "storage": "ok" / }, / "version": "1.0.0", / "checkedAt": "2026-09-27T11:05:00+08:00" / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] API-29  GET /api/docs
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-29 |
+| 请求方法 | GET |
+| 请求路径 | /api/docs |
+| 是否鉴权 | 否 |
+| 功能说明 | 在线接口文档（OpenAPI / Swagger UI） |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| // 浏览器可直接访问的交互式文档页面 / // 生产环境建议限制为仅内网可访问 |
+
+<<END TABLE>>
+[Normal] API-30  GET /api/v1/admin/tasks
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | API-30 |
+| 请求方法 | GET |
+| 请求路径 | /api/v1/admin/tasks |
+| 是否鉴权 | 是（管理员） |
+| 功能说明 | 管理员查看任务列表与失败任务，用于排查与批量重试 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 3 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| status | string | 否 | queued / processing / failed / succeeded |
+| taskType | string | 否 | transcode / subtitle / enhancement / remap |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { / "code": "0", "message": "ok", / "data": { / "list": [ / { "id": 32, "videoId": 15, "userId": 1, "taskType": "subtitle", / "status": "failed", "retryCount": 1, / "errorCode": "E4003", "errorMsg": "音频解析失败：文件损坏", / "createdAt": "2026-09-27T10:34:00+08:00" } / ], / "page": 1, "pageSize": 20, "total": 3 / }, / "traceId": "…" / } |
+
+<<END TABLE>>
+[Normal] 错误码：E1006 需要管理员权限
+[Normal] 四、AI 微服务接口（内网）
+[Normal] AI 微服务不直接对外暴露，仅供业务后端与任务 worker 调用，或通过 Redis 队列消费任务。本节列出内部接口，便于调试与联调。
+[Normal] AI-01  GET /ai/v1/health
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | AI-01 |
+| 请求方法 | GET |
+| 请求路径 | /ai/v1/health |
+| 是否鉴权 | 内网 |
+| 功能说明 | AI 服务健康检查，返回模型加载状态 |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { "status": "ok", "model": "faster-whisper-base", / "modelLoaded": true, "device": "cpu", "queueDepth": 1 } |
+
+<<END TABLE>>
+[Normal] AI-02  POST /ai/v1/transcribe
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | AI-02 |
+| 请求方法 | POST |
+| 请求路径 | /ai/v1/transcribe |
+| 是否鉴权 | 内网 |
+| 功能说明 | 对指定音频文件执行识别并生成字幕文件（同步接口，供调试；生产走队列） |
+| 版本状态 | MVP |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 5 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| audioPath | string | 是 | 音频文件绝对路径或存储键 |
+| language | string | 否 | 语言，默认 zh |
+| modelSize | string | 否 | 模型规格，默认取服务配置 |
+| outputDir | string | 是 | 字幕文件输出目录 |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { "status": "succeeded", / "srtPath": "/data/subtitles/15/9f1c….srt", / "vttPath": "/data/subtitles/15/9f1c….vtt", / "segmentCount": 214, "durationMs": 620000, / "elapsedMs": 372000, "avgConfidence": 0.9123 } |
+
+<<END TABLE>>
+[Normal] 错误码：E4003 音频解析失败；E4001 模型推理超时
+[Normal] AI-03  POST /ai/v1/remap
+<<TABLE 7 rows x 2 cols>>
+| 项目 | 说明 |
+| 接口编号 | AI-03 |
+| 请求方法 | POST |
+| 请求路径 | /ai/v1/remap |
+| 是否鉴权 | 内网 |
+| 功能说明 | 离线频谱重映射：按参数对音频轨做频率压缩/搬移并输出增强音轨 |
+| 版本状态 | v1.1 |
+
+<<END TABLE>>
+[Normal] 请求参数
+<<TABLE 4 rows x 4 cols>>
+| 参数 | 类型 | 必填 | 说明 |
+| audioPath | string | 是 | 输入音频路径 |
+| params | object | 是 | 重映射参数：压缩比、源频段、目标频段中心、增益补偿 |
+| outputPath | string | 是 | 增强音轨输出路径 |
+
+<<END TABLE>>
+[Normal] 响应示例
+<<TABLE 1 rows x 1 cols>>
+| { "status": "succeeded", / "outputPath": "/data/enhanced/15/9f1c….wav", / "elapsedMs": 128000, "paramsUsed": { "ratio": 1.8, "srcLow": [200, 800], / "srcHigh": [4000, 8000], "targetCenter": 1500, "gainDb": 6 } } |
+
+<<END TABLE>>
+[Normal] 五、错误码清单
+[Normal] 错误码规则：E + 三位数字。首位表示类别，后两位为序号。错误码一经分配不再改变含义。
+<<TABLE 31 rows x 4 cols>>
+| 错误码 | HTTP | 含义 | 用户提示建议 |
+| E1001 | 401 | 邮箱或密码错误 | 邮箱或密码错误，请重新输入 |
+| E1002 | 409 | 邮箱已被注册 | 该邮箱已注册，请直接登录或更换邮箱 |
+| E1003 | 401 | 登录状态失效 | 登录已过期，请重新登录 |
+| E1004 | 400 | 密码不符合要求 | 密码需不少于 8 位且包含字母与数字 |
+| E1005 | 403 | 账号已停用 | 账号不可用，请联系管理员 |
+| E1006 | 403 | 需要管理员权限 | 当前账号无此操作权限 |
+| E2001 | 500 | 文件写入存储失败 | 上传失败，请稍后重试 |
+| E2002 | 413 | 文件超过大小限制 | 文件超过 2 GB 限制，请压缩或截取后重试 |
+| E2003 | 415 | 不支持的文件格式 | 请上传 MP4 / MOV / AVI / MKV 格式的视频 |
+| E2004 | 404 | 视频不存在或无权访问 | 视频不存在或已被删除 |
+| E2005 | 409 | 视频尚未转码完成 | 视频仍在处理中，请稍后再试 |
+| E3001 | 503 | 任务入队失败 | 任务排队失败，请稍后重试 |
+| E3002 | 409 | 任务重试次数已用尽 | 该任务已重试多次，请检查视频文件或联系管理员 |
+| E3003 | 404 | 任务不存在或无权访问 | 任务不存在 |
+| E3004 | 409 | 任务当前状态不允许重试 | 当前任务状态不支持重试 |
+| E4001 | 504 | 模型推理超时 | 处理超时，可重试或尝试更短的视频 |
+| E4002 | 503 | AI 服务不可用 | 字幕服务暂时不可用，请稍后重试 |
+| E4003 | 422 | 音频解析失败 | 音频解析失败，请更换视频文件 |
+| E4004 | 404 | 字幕不存在 | 该视频还没有字幕 |
+| E5001 | 500 | 听力配置保存失败 | 保存失败，请稍后重试 |
+| E5002 | 404 | 听力配置不存在 | 配置不存在 |
+| E5003 | 404 | 尚未生成听力配置 | 请先完成一次听力自测 |
+| E6001 | 400 | 自测数据不完整或格式错误 | 自测数据不完整，请重新测试 |
+| E6002 | 404 | 自测会话不存在 | 未找到该次自测记录 |
+| E7001 | 400 | 参数快照格式错误 | 参数异常，请刷新后重试 |
+| E7002 | 400 | 评分超出范围 | 评分需在 1—5 之间 |
+| E7003 | 404 | 指定范围内无数据 | 当前筛选条件下没有可导出的数据 |
+| E9000 | 500 | 服务内部错误 | 服务开小差了，请稍后重试 |
+| E9001 | 500 | 数据操作失败 | 操作失败，请稍后重试 |
+| E9002 | 503 | 依赖组件不可用 | 服务暂时不可用，请稍后重试 |
+
+<<END TABLE>>
+[Normal] 表 5-1  错误码清单
+[Normal] 六、接口变更流程
+[Normal] （1）提出变更：在本文档修订记录中登记变更点、原因与影响范围（前端、后端、AI 服务、测试用例）。
+[Normal] （2）评估兼容性：新增可选字段视为兼容变更，可直接实施；修改字段含义、删除字段、改变路径视为破坏性变更。
+[Normal] （3）破坏性变更处理：提升接口版本（/api/v2），保留旧版本一个迭代周期，或在本课题范围内同步修改全部调用方并回归测试。
+[Normal] （4）同步更新：接口文档、数据库设计（如涉及）、测试用例三者必须同步修改，避免出现文档与实现不一致。
+[Normal] （5）阶段冻结：联调期（第 10 周起）原则上不再变更接口；确需变更须记录并对受影响功能做一轮回归。
+<<TABLE 1 rows x 1 cols>>
+| 一致性要求：本文档中的字段命名、错误码与状态枚举与《数据库设计说明书》和《测试用例文档》保持一致；若需调整，请以本文档为接口层权威来源，同步修改其他两份文档。 |
+
+<<END TABLE>>
+
+================================================================================
+OUTLINE (paragraphs with Heading/Title styles or bold):

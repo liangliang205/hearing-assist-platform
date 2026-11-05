@@ -1,0 +1,420 @@
+FILE: D:\dsh_workspace\项目文档③数据库设计说明书.docx
+CORE: title='' author='python-docx' created=2013-12-23 23:15:00+00:00 modified=2013-12-23 23:15:00+00:00
+PARAGRAPHS=79 TABLES=34 SECTIONS=1
+================================================================================
+[Normal] 岭南师范学院  软件工程专业 · 项目文档 ③
+[Normal] 数据库设计说明书
+[Normal] 基于 React+TypeScript 与 AI 微服务的听障辅助视频处理及听力自测平台
+<<TABLE 8 rows x 2 cols>>
+| 项目 | 内容 |
+| 文档编号 | DOC-DBD-003 |
+| 版本 / 日期 | V1.0 / 2026 年 9 月 |
+| 学生 / 学号 | 梁境峰（学号 202308764415） |
+| 专业 / 学院 | 软件工程 / 计算机与智能教育学院 |
+| 指导教师 | 程翔 |
+| 上游文档 | 《软件需求规格说明书》DOC-SRS-001、《系统设计说明书》DOC-SDD-002 |
+| 文档用途 | 定义数据库逻辑与物理结构、字段含义、约束与索引，作为迁移脚本与数据访问层的依据 |
+
+<<END TABLE>>
+[Normal] 修订记录
+<<TABLE 2 rows x 4 cols>>
+| 版本 | 日期 | 修订内容 | 修订人 |
+| V1.0 | 2026 年 9 月 | 首次发布，覆盖 MVP 全部数据表；v1.1 的 remap_tasks 表给出结构预留 | 梁境峰 |
+
+<<END TABLE>>
+[Normal] 一、概述
+[Normal] 1.1 设计目标
+[Normal] （1）完整支撑需求规格说明书中的 MVP 功能需求与实验数据采集需求。
+[Normal] （2）结构清晰、命名一致，便于单人维护与后续扩展（v1.1 离线频谱重映射、v1.2 字幕编辑与预设）。
+[Normal] （3）兼顾开发期 SQLite 与部署期 PostgreSQL 的兼容性，避免迁移时重构。
+[Normal] （4）关键查询有索引支撑，避免视频列表、任务列表、实验数据导出等操作出现全表扫描。
+[Normal] 1.2 数据库环境
+<<TABLE 8 rows x 2 cols>>
+| 项目 | 内容 |
+| 数据库类型 | PostgreSQL 14 及以上（部署环境）；SQLite 3（仅本地开发加速） |
+| 字符集与排序 | UTF8；排序规则默认（中文内容以全文存储为主，不做排序依赖） |
+| 访问方式 | 通过 Prisma ORM 访问，不使用手工拼接 SQL |
+| 迁移方式 | Prisma Migrate 管理版本化迁移，部署时执行 migrate deploy |
+| 时间存储 | 统一使用 timestamptz（带时区），应用层按 UTC 存储、按本地时区展示 |
+| 主键策略 | 自增整数主键，便于索引与调试；对外暴露的资源使用独立业务 ID |
+| 软删除策略 | MVP 不采用软删除，删除即级联清理；如后续需要审计再引入 deleted_at |
+
+<<END TABLE>>
+[Normal] 1.3 命名与设计约定
+<<TABLE 10 rows x 3 cols>>
+| 对象 | 约定 | 示例 |
+| 表名 | 小写英文复数，单词间下划线分隔 | users、subtitle_segments、enhancement_logs |
+| 字段名 | 小写英文，单词间下划线分隔 | created_at、duration_ms、video_id |
+| 主键 | 统一命名 id | id |
+| 外键 | 引用表名单数 + _id | user_id、video_id、task_id |
+| 布尔字段 | 以 is_ 或 has_ 前缀 | is_active、is_current |
+| 时间字段 | 以 _at 结尾 | created_at、finished_at |
+| 状态与类型 | 使用 varchar 存储枚举值，取值在应用层强约束 | status = 'queued' | 'processing' | ... |
+| JSON 配置 | PostgreSQL 使用 jsonb，SQLite 使用 text | config_json、config_snapshot |
+| 敏感数据 | 密码仅存哈希；不存储明文凭证 | password_hash |
+
+<<END TABLE>>
+[Normal] 表 1-1  命名与设计约定
+[Normal] 1.4 枚举值定义
+<<TABLE 19 rows x 3 cols>>
+| 枚举 | 取值 | 含义 |
+| task.status | queued | 排队等待处理 |
+|  | processing | 处理中 |
+|  | succeeded | 处理成功 |
+|  | failed | 处理失败（可重试） |
+|  | canceled | 已取消（视频被删除等） |
+| task.task_type | transcode | 视频转码与音频抽取 |
+|  | subtitle | AI 字幕生成 |
+|  | enhancement | 音频增强（MVP 由前端实时完成，此类型仅记录参数） |
+|  | remap | 离线频谱重映射（v1.1） |
+| task.trigger_source | auto | 系统自动触发 |
+|  | manual | 用户或管理员手动触发 |
+|  | retry | 失败后重试触发 |
+| videos.review_status | none | 未评价 |
+|  | rated | 已提交主观评价 |
+| hearing_tests.ear | left / right | 左耳 / 右耳 |
+| hearing_tests.response | heard | 听见 |
+|  | not_heard | 未听见 |
+|  | unsure | 不确定 |
+
+<<END TABLE>>
+[Normal] 表 1-2  枚举值定义
+[Normal] 二、概念模型（ER 设计）
+[Normal] 2.1 实体清单
+<<TABLE 11 rows x 4 cols>>
+| 序号 | 实体（表名） | 说明 | 版本 |
+| E1 | users | 用户账号与个人资料 | MVP |
+| E2 | hearing_profiles | 听力配置（个体化音频增强参数来源） | MVP |
+| E3 | hearing_tests | 听力自测记录（含逐频点反馈与环境信息） | MVP |
+| E4 | videos | 视频资源及其处理状态、播放地址 | MVP |
+| E5 | tasks | 统一异步任务表（转码 / 字幕 / 重映射） | MVP |
+| E6 | subtitles | 字幕文件与整体质量指标 | MVP |
+| E7 | subtitle_segments | 字幕分段（文本 + 起止时间 + 置信度） | MVP |
+| E8 | enhancement_logs | 增强使用记录、参数快照与主观评价 | MVP |
+| E9 | video_metrics | 处理耗时与资源使用等实验数据 | MVP |
+| E10 | remap_tasks | 离线频谱重映射任务与参数快照（结构预留） | v1.1 |
+
+<<END TABLE>>
+[Normal] 表 2-1  实体清单
+[Normal] 2.2 实体关系
+<<TABLE 1 rows x 1 cols>>
+| users (1) ────< (N) hearing_profiles        一个用户可保存多份听力配置，其中一份为生效配置 / users (1) ────< (N) hearing_tests           一个用户可多次自测 / users (1) ────< (N) videos                  一个用户拥有多个视频 / users (1) ────< (N) enhancement_logs        一个用户产生多条增强使用记录 / videos (1) ───< (N) tasks                   一个视频对应转码、字幕等任务 / videos (1) ───< (1) subtitles               一个视频当前保留一份有效字幕 / videos (1) ───< (N) enhancement_logs        一个视频可被多次以不同参数试听 / videos (1) ───< (N) video_metrics           一个视频可有多条阶段性能记录 / tasks  (1) ───< (1) subtitles               字幕任务成功后产出字幕记录 / subtitles (1) ─< (N) subtitle_segments      一份字幕包含多个分段 / tasks  (1) ───< (N) remap_tasks             （v1.1）重映射任务与参数快照 / 级联规则： / users      删除 → 级联删除其 hearing_profiles / hearing_tests / videos / enhancement_logs / videos     删除 → 级联删除其 tasks / subtitles / enhancement_logs / video_metrics / subtitles  删除 → 级联删除其 subtitle_segments / 文件系统    与数据库记录保持同步：删除记录时一并清理视频、音频、字幕文件 |
+
+<<END TABLE>>
+[Normal] 图 2-1  实体关系与级联约束
+[Normal] 三、逻辑结构设计（数据字典）
+[Normal] 以下逐表给出字段定义。类型列给出 PostgreSQL 类型，括号内为 SQLite 兼容写法（如不同）。所有表默认包含主键 id。
+[Normal] 3.1 users（用户表）
+<<TABLE 10 rows x 4 cols>>
+| 字段 | 类型 | 约束 | 说明 |
+| id | bigserial | PK | 用户主键 |
+| email | varchar(255) | NOT NULL, UNIQUE | 登录邮箱，统一转小写存储 |
+| password_hash | varchar(100) | NOT NULL | bcrypt 哈希值，禁止存明文 |
+| display_name | varchar(50) | NOT NULL | 显示名称 |
+| role | varchar(20) | NOT NULL, DEFAULT 'user' | 角色：user / admin |
+| hearing_note | text | NULL | 用户自述听力情况说明（可选） |
+| last_login_at | timestamptz | NULL | 最近登录时间 |
+| created_at | timestamptz | NOT NULL, DEFAULT now() | 创建时间 |
+| updated_at | timestamptz | NOT NULL | 更新时间 |
+
+<<END TABLE>>
+<<TABLE 2 rows x 4 cols>>
+| 索引名 | 类型 | 字段 | 用途 |
+| users_email_key | 唯一索引 | email | 登录查询与邮箱唯一性校验 |
+
+<<END TABLE>>
+[Normal] 表 3-1  users 表结构与索引
+[Normal] 3.2 hearing_profiles（听力配置表）
+<<TABLE 10 rows x 4 cols>>
+| 字段 | 类型 | 约束 | 说明 |
+| id | bigserial | PK | 配置主键 |
+| user_id | bigint | NOT NULL, FK→users.id, ON DELETE CASCADE | 所属用户 |
+| name | varchar(50) | NOT NULL | 配置名称，如“默认配置”“自测 0912” |
+| source | varchar(20) | NOT NULL | 来源：test（自测生成）/ manual（手动微调） |
+| thresholds_json | jsonb | NOT NULL | 各频点阈值，按左右耳组织（结构见 3.2.1） |
+| audible_ranges_json | jsonb | NULL | 由阈值推导的可听区间，便于前端直接使用 |
+| is_current | boolean | NOT NULL, DEFAULT false | 是否为当前生效配置 |
+| created_at | timestamptz | NOT NULL | 创建时间 |
+| updated_at | timestamptz | NOT NULL | 更新时间 |
+
+<<END TABLE>>
+[Normal] 3.2.1 thresholds_json 结构示例
+<<TABLE 1 rows x 1 cols>>
+| { / "unit": "dB", / "left":  { "500": 10, "1000": 5, "2000": 20, "4000": 40, "8000": 55 }, / "right": { "500": 5,  "1000": 5, "2000": 15, "4000": 35, "8000": 50 } / } / /* 数值含义：在本次测试设备与环境下的相对可听阈，用于计算增强增益， / 不表示临床听力损失等级，页面与论文中须明示此定位。 */ |
+
+<<END TABLE>>
+<<TABLE 3 rows x 4 cols>>
+| 索引名 | 类型 | 字段 | 用途 |
+| idx_profiles_user_current | 复合索引 | user_id, is_current | 快速取用户当前生效配置 |
+| uq_profiles_user_current | 唯一部分索引 | user_id WHERE is_current | 保证每个用户仅一份生效配置 |
+
+<<END TABLE>>
+[Normal] 表 3-2  hearing_profiles 表结构与索引
+[Normal] 3.3 hearing_tests（听力自测记录表）
+<<TABLE 12 rows x 4 cols>>
+| 字段 | 类型 | 约束 | 说明 |
+| id | bigserial | PK | 自测记录主键 |
+| user_id | bigint | NOT NULL, FK→users.id, CASCADE | 所属用户 |
+| profile_id | bigint | NULL, FK→hearing_profiles.id, SET NULL | 本次自测生成的配置 |
+| frequency_hz | integer | NOT NULL | 测试频点：500/1000/2000/4000/8000 |
+| ear | varchar(10) | NOT NULL | 测试耳：left / right |
+| response | varchar(20) | NOT NULL | 反馈：heard / not_heard / unsure |
+| volume_level | smallint | NULL | 测试时音量档位（0—100） |
+| device_info | jsonb | NULL | 设备与环境信息（浏览器、平台、是否耳机） |
+| tested_at | timestamptz | NOT NULL | 该频点测试时间 |
+| session_id | uuid | NOT NULL | 同一次自测的会话标识，用于聚合 |
+| created_at | timestamptz | NOT NULL | 记录创建时间 |
+
+<<END TABLE>>
+<<TABLE 3 rows x 4 cols>>
+| 索引名 | 类型 | 字段 | 用途 |
+| idx_tests_user_time | 复合索引 | user_id, tested_at DESC | 历史自测记录列表查询 |
+| idx_tests_session | 普通索引 | session_id | 按一次自测聚合并分析重复性 |
+
+<<END TABLE>>
+[Normal] 表 3-3  hearing_tests 表结构与索引
+[Normal] 3.4 videos（视频表）
+<<TABLE 15 rows x 4 cols>>
+| 字段 | 类型 | 约束 | 说明 |
+| id | bigserial | PK | 视频主键 |
+| user_id | bigint | NOT NULL, FK→users.id, CASCADE | 上传者 |
+| title | varchar(200) | NOT NULL | 视频标题，默认取原文件名 |
+| original_name | varchar(255) | NOT NULL | 用户上传时的原始文件名（仅记录，不用于路径） |
+| storage_key | varchar(255) | NOT NULL | 存储相对路径（UUID 命名），存储模块据此定位 |
+| playback_url | varchar(255) | NULL | 转码完成后的播放地址 |
+| audio_key | varchar(255) | NULL | 抽取出的 16 kHz 单声道音频路径 |
+| size_bytes | bigint | NOT NULL | 原始文件大小 |
+| duration_ms | integer | NULL | 视频时长（转码后写入） |
+| status | varchar(20) | NOT NULL, DEFAULT 'uploaded' | uploaded / transcoding / ready / failed |
+| review_status | varchar(20) | NOT NULL, DEFAULT 'none' | none / rated |
+| created_at | timestamptz | NOT NULL | 上传时间 |
+| updated_at | timestamptz | NOT NULL | 更新时间 |
+| deleted_at | timestamptz | NULL | 预留字段，MVP 不使用 |
+
+<<END TABLE>>
+<<TABLE 3 rows x 4 cols>>
+| 索引名 | 类型 | 字段 | 用途 |
+| idx_videos_user_created | 复合索引 | user_id, created_at DESC | 视频列表分页与排序 |
+| idx_videos_status | 普通索引 | status | 后台查看未完成处理的视频 |
+
+<<END TABLE>>
+[Normal] 表 3-4  videos 表结构与索引
+[Normal] 3.5 tasks（统一任务表）
+[Normal] 所有异步处理共用此表，通过 task_type 区分业务类型，通过 task_key 保证幂等。
+<<TABLE 17 rows x 4 cols>>
+| 字段 | 类型 | 约束 | 说明 |
+| id | bigserial | PK | 任务主键 |
+| video_id | bigint | NOT NULL, FK→videos.id, CASCADE | 关联视频 |
+| user_id | bigint | NOT NULL, FK→users.id, CASCADE | 任务归属用户，便于权限校验 |
+| task_type | varchar(20) | NOT NULL | transcode / subtitle / enhancement / remap |
+| status | varchar(20) | NOT NULL, DEFAULT 'queued' | queued / processing / succeeded / failed / canceled |
+| progress | smallint | NOT NULL, DEFAULT 0 | 进度百分比（0—100，粗粒度即可） |
+| stage_text | varchar(50) | NULL | 阶段文案，如“转码中”“识别中” |
+| task_key | varchar(120) | NOT NULL, UNIQUE | 幂等键，如 sub:video:15:try1 |
+| retry_count | smallint | NOT NULL, DEFAULT 0 | 已重试次数，上限 3 |
+| trigger_source | varchar(20) | NOT NULL, DEFAULT 'auto' | auto / manual / retry |
+| error_code | varchar(20) | NULL | 失败错误码，与接口规范错误码一致 |
+| error_msg | text | NULL | 失败原因摘要（不含敏感信息） |
+| started_at | timestamptz | NULL | 开始处理时间 |
+| finished_at | timestamptz | NULL | 结束时间 |
+| created_at | timestamptz | NOT NULL | 创建时间 |
+| updated_at | timestamptz | NOT NULL | 更新时间 |
+
+<<END TABLE>>
+<<TABLE 4 rows x 4 cols>>
+| 索引名 | 类型 | 字段 | 用途 |
+| uq_tasks_task_key | 唯一索引 | task_key | 防止重复创建同一处理任务 |
+| idx_tasks_video_type | 复合索引 | video_id, task_type | 查询某视频的各阶段任务状态 |
+| idx_tasks_status_created | 复合索引 | status, created_at | 管理员查看排队与失败任务 |
+
+<<END TABLE>>
+[Normal] 表 3-5  tasks 表结构与索引
+[Normal] 3.6 subtitles（字幕表）
+<<TABLE 14 rows x 4 cols>>
+| 字段 | 类型 | 约束 | 说明 |
+| id | bigserial | PK | 字幕主键 |
+| video_id | bigint | NOT NULL, FK→videos.id, CASCADE | 关联视频 |
+| task_id | bigint | NULL, FK→tasks.id, SET NULL | 产出该字幕的任务 |
+| language | varchar(10) | NOT NULL, DEFAULT 'zh' | 字幕语言 |
+| srt_key | varchar(255) | NULL | SRT 文件存储路径 |
+| vtt_key | varchar(255) | NULL | VTT 文件存储路径（用于播放器挂载） |
+| segment_count | integer | NOT NULL, DEFAULT 0 | 分段数量 |
+| duration_ms | integer | NULL | 字幕覆盖的总时长 |
+| model_name | varchar(50) | NULL | 使用的识别模型规格，如 base / small |
+| avg_confidence | numeric(5,4) | NULL | 平均置信度，用于质量趋势观察 |
+| is_edited | boolean | NOT NULL, DEFAULT false | 是否经过人工编辑（v1.1 使用） |
+| created_at | timestamptz | NOT NULL | 生成时间 |
+| updated_at | timestamptz | NOT NULL | 更新时间 |
+
+<<END TABLE>>
+<<TABLE 2 rows x 4 cols>>
+| 索引名 | 类型 | 字段 | 用途 |
+| uq_subtitles_video | 唯一索引 | video_id | 一个视频保留一份有效字幕 |
+
+<<END TABLE>>
+[Normal] 表 3-6  subtitles 表结构与索引
+[Normal] 3.7 subtitle_segments（字幕分段表）
+<<TABLE 9 rows x 4 cols>>
+| 字段 | 类型 | 约束 | 说明 |
+| id | bigserial | PK | 分段主键 |
+| subtitle_id | bigint | NOT NULL, FK→subtitles.id, CASCADE | 所属字幕 |
+| seq | integer | NOT NULL | 分段序号，从 1 开始 |
+| start_ms | integer | NOT NULL | 起始时间（毫秒） |
+| end_ms | integer | NOT NULL | 结束时间（毫秒），须大于 start_ms |
+| text | text | NOT NULL | 字幕文本 |
+| confidence | numeric(5,4) | NULL | 该分段置信度 |
+| created_at | timestamptz | NOT NULL | 创建时间 |
+
+<<END TABLE>>
+<<TABLE 2 rows x 4 cols>>
+| 索引名 | 类型 | 字段 | 用途 |
+| idx_segments_subtitle_seq | 复合索引 | subtitle_id, seq | 按顺序读取分段生成字幕文件 |
+
+<<END TABLE>>
+[Normal] 表 3-7  subtitle_segments 表结构与索引
+[Normal] 3.8 enhancement_logs（增强使用与评价表）
+<<TABLE 12 rows x 4 cols>>
+| 字段 | 类型 | 约束 | 说明 |
+| id | bigserial | PK | 记录主键 |
+| user_id | bigint | NOT NULL, FK→users.id, CASCADE | 使用用户 |
+| video_id | bigint | NOT NULL, FK→videos.id, CASCADE | 试听视频 |
+| profile_id | bigint | NULL, FK→hearing_profiles.id, SET NULL | 所用听力配置 |
+| mode | varchar(20) | NOT NULL | 增强方式：realtime（实时，MVP）/ remap（离线，v1.1） |
+| intensity | smallint | NOT NULL | 强度百分比 0—100 |
+| config_snapshot | jsonb | NOT NULL | 本次使用的完整参数快照（频段增益、压缩参数等） |
+| rating | smallint | NULL | 主观评分 1—5，NULL 表示未评分 |
+| comment | text | NULL | 主观备注 |
+| rated_at | timestamptz | NULL | 评分提交时间 |
+| created_at | timestamptz | NOT NULL | 记录创建时间 |
+
+<<END TABLE>>
+[Normal] 3.8.1 config_snapshot 结构示例
+<<TABLE 1 rows x 1 cols>>
+| { / "mode": "realtime", / "intensity": 70, / "filters": { / "lowShelf":  { "freq": 500,  "gainDb": 4 }, / "peaking":   { "freq": 1500, "gainDb": 6, "q": 1.0 }, / "highShelf": { "freq": 3000, "gainDb": 12 } / }, / "compressor": { "threshold": -24, "ratio": 3, "attackMs": 10, "releaseMs": 200 }, / "profileId": 12 / } |
+
+<<END TABLE>>
+<<TABLE 3 rows x 4 cols>>
+| 索引名 | 类型 | 字段 | 用途 |
+| idx_enhance_user_created | 复合索引 | user_id, created_at DESC | 实验数据列表与导出筛选 |
+| idx_enhance_video | 普通索引 | video_id | 按视频聚合评价数据 |
+
+<<END TABLE>>
+[Normal] 表 3-8  enhancement_logs 表结构与索引
+[Normal] 3.9 video_metrics（处理性能数据表）
+<<TABLE 9 rows x 4 cols>>
+| 字段 | 类型 | 约束 | 说明 |
+| id | bigserial | PK | 记录主键 |
+| video_id | bigint | NOT NULL, FK→videos.id, CASCADE | 关联视频 |
+| stage | varchar(20) | NOT NULL | 阶段：transcode / subtitle / remap |
+| duration_ms | integer | NOT NULL | 该阶段处理耗时 |
+| input_duration_ms | integer | NULL | 输入媒体时长，用于计算实时率（RTF） |
+| file_size_bytes | bigint | NULL | 相关文件大小 |
+| extra_json | jsonb | NULL | 补充信息（分段数、并发数、模型规格等） |
+| created_at | timestamptz | NOT NULL | 记录时间 |
+
+<<END TABLE>>
+<<TABLE 2 rows x 4 cols>>
+| 索引名 | 类型 | 字段 | 用途 |
+| idx_metrics_video_stage | 复合索引 | video_id, stage | 按视频查看各阶段耗时 |
+
+<<END TABLE>>
+[Normal] 表 3-9  video_metrics 表结构与索引
+[Normal] 3.10 remap_tasks（离线频谱重映射表，v1.1 预留）
+<<TABLE 11 rows x 4 cols>>
+| 字段 | 类型 | 约束 | 说明 |
+| id | bigserial | PK | 记录主键 |
+| video_id | bigint | NOT NULL, FK→videos.id, CASCADE | 关联视频 |
+| user_id | bigint | NOT NULL, FK→users.id, CASCADE | 发起用户 |
+| task_id | bigint | NULL, FK→tasks.id, SET NULL | 对应的统一任务记录 |
+| profile_id | bigint | NULL, FK→hearing_profiles.id, SET NULL | 所用听力配置 |
+| params_json | jsonb | NOT NULL | 重映射参数（压缩比、源/目标频段、增益补偿等） |
+| output_key | varchar(255) | NULL | 生成的增强音轨文件路径 |
+| output_duration_ms | integer | NULL | 输出音轨时长，用于校验与校验对齐 |
+| status | varchar(20) | NOT NULL, DEFAULT 'queued' | 与 tasks.status 同步 |
+| created_at | timestamptz | NOT NULL | 创建时间 |
+
+<<END TABLE>>
+<<TABLE 1 rows x 1 cols>>
+| 版本说明：本表为 v1.1 结构预留，MVP 阶段只建表不写入数据。提前定义可避免实现离线重映射时改动任务表结构。 |
+
+<<END TABLE>>
+[Normal] 四、完整性约束与业务规则
+<<TABLE 13 rows x 3 cols>>
+| 编号 | 约束 / 规则 | 实现方式 |
+| C1 | 邮箱唯一 | users.email 唯一索引 + 应用层前置校验 |
+| C2 | 密码强度（≥8 位含字母与数字） | 应用层校验，数据库只存哈希 |
+| C3 | 每个用户最多一份生效听力配置 | hearing_profiles 上 user_id + is_current 唯一部分索引；切换时在同一事务内先置 false 再置 true |
+| C4 | 自测分段时间合法（end_ms > start_ms） | 应用层校验 + 生成字幕文件前统一排序与修正 |
+| C5 | 分段序号连续唯一 | subtitle_id + seq 唯一约束 |
+| C6 | 任务幂等 | tasks.task_key 唯一；重复创建返回既有任务 |
+| C7 | 任务重试上限 3 次 | 应用层控制，超限返回 E3002 |
+| C8 | 重试次数与状态一致 | 检查约束：status = 'failed' 或 retry_count >= 0 |
+| C9 | 评分范围 1—5 | 应用层校验 + 数据库检查约束 |
+| C10 | 用户只能访问自己的资源 | 所有查询附加 user_id 条件（应用层强制） |
+| C11 | 删除用户级联清理全部数据与文件 | 外键 ON DELETE CASCADE + 存储模块同步清理 |
+| C12 | 视频 status 与任务状态一致 | 转码任务成功后才置 ready；失败置 failed 并保留可重试状态 |
+
+<<END TABLE>>
+[Normal] 表 4-1  完整性约束与业务规则
+[Normal] 4.1 一致性事务要点
+[Normal] （1）切换生效听力配置：同一事务内先将该用户其他配置 is_current 置 false，再置目标配置为 true，避免并发下出现两份生效配置。
+[Normal] （2）创建任务：先按 task_key 查询，不存在则插入；唯一索引冲突时返回既有任务，保证幂等。
+[Normal] （3）视频删除：事务内删除 videos 记录（级联 tasks / subtitles / enhancement_logs / video_metrics），提交成功后再清理磁盘文件，避免文件已删而记录保留。
+[Normal] （4）字幕写入：先写入 subtitle_segments，再更新 subtitles 的 segment_count 与 avg_confidence，最后写入 SRT/VTT 文件路径。
+[Normal] （5）自测保存：写入 hearing_tests 明细与 hearing_profiles 配置在同一事务内完成，防止出现有明细无配置的中间状态。
+[Normal] 五、物理设计与性能考虑
+[Normal] 5.1 存储估算
+<<TABLE 10 rows x 4 cols>>
+| 对象 | 单条/单文件估算 | 规模假设 | 占用估算 |
+| users 记录 | 约 1 KB | 10 个用户 | 可忽略 |
+| hearing_tests 记录 | 约 0.5 KB | 每用户 10 次自测 × 10 频点 = 100 行 | 约 50 KB |
+| videos 记录 | 约 1 KB | 100 个视频 | 约 100 KB |
+| tasks 记录 | 约 1 KB | 每视频 2—3 个任务 = 300 行 | 约 300 KB |
+| subtitle_segments | 约 0.3 KB | 每 10 分钟视频约 200 段 × 100 视频 | 约 6 MB |
+| enhancement_logs | 约 0.5 KB（含参数快照） | 500 次试听评价 | 约 250 KB |
+| 视频原始文件 | 50—500 MB | 100 个视频 | 约 5—50 GB（最大占用项） |
+| 转码与音频文件 | 原文件的 0.5—1 倍 | 100 个视频 | 约 5—50 GB |
+| 字幕文件 | 每 10 分钟约 20 KB | 100 个视频 | 约 2 MB |
+
+<<END TABLE>>
+[Normal] 表 5-1  数据量估算（按课程课题规模）
+<<TABLE 1 rows x 1 cols>>
+| 容量结论：结论：结构化数据总量在百 MB 级别，压力主要来自音视频文件。因此设计重点是文件生命周期管理（删除级联、失败中间文件清理），而不是数据库分表与分区。 |
+
+<<END TABLE>>
+[Normal] 5.2 性能与索引策略
+[Normal] （1）视频列表：user_id + created_at DESC 复合索引支撑分页与排序，避免排序时全表扫描。
+[Normal] （2）任务查询：video_id + task_type 定位阶段状态；status + created_at 支撑管理端查看积压任务。
+[Normal] （3）实验数据导出：user_id + created_at DESC 支撑按时间范围筛选；导出时限制单次行数并在界面提示。
+[Normal] （4）自测历史：user_id + tested_at DESC 支撑倒序列表；session_id 支撑按次聚合做重复性分析。
+[Normal] （5）字幕分段：subtitle_id + seq 保证顺序读取，生成字幕文件时不额外排序。
+[Normal] （6）JSON 字段（thresholds_json、config_snapshot、params_json）：MVP 阶段不做 GIN 索引，仅在应用层读取整体对象；若后续需要按参数检索再补充。
+[Normal] 5.3 备份与恢复
+[Normal] · 开发期：使用 pg_dump 定期导出结构与数据，脚本纳入仓库的 scripts/ 目录。
+[Normal] · 部署期：数据卷单独挂载，容器重建不丢失数据；升级前先执行一次备份。
+[Normal] · 文件与数据库一致性：以数据库记录为准；若出现文件缺失，管理端提供“重建派生文件”入口（v1.1）。
+[Normal] · 演示前：提前完成一次完整备份，避免演示当天因数据问题无法恢复。
+[Normal] 六、Prisma 模型定义（参考实现）
+[Normal] 以下为 schema.prisma 的核心片段，作为迁移脚本的权威来源；完整定义以仓库中的 prisma/schema.prisma 为准。
+<<TABLE 1 rows x 1 cols>>
+| // prisma/schema.prisma（核心片段） / model User { / id            BigInt   @id @default(autoincrement()) / email         String   @unique @db.VarChar(255) / passwordHash  String   @map("password_hash") @db.VarChar(100) / displayName   String   @map("display_name") @db.VarChar(50) / role          String   @default("user") @db.VarChar(20) / hearingNote   String?  @map("hearing_note") / lastLoginAt   DateTime? @map("last_login_at") / createdAt     DateTime @default(now()) @map("created_at") / updatedAt     DateTime @updatedAt @map("updated_at") / profiles     HearingProfile[] / tests        HearingTest[] / videos       Video[] / enhancements EnhancementLog[] / @@map("users") / } / model HearingProfile { / id                BigInt   @id @default(autoincrement()) / userId            BigInt   @map("user_id") / name              String   @db.VarChar(50) / source            String   @db.VarChar(20) / thresholdsJson    Json     @map("thresholds_json") / audibleRangesJson Json?    @map("audible_ranges_json") / isCurrent         Boolean  @default(false) @map("is_current") / createdAt         DateTime @default(now()) @map("created_at") / updatedAt         DateTime @updatedAt @map("updated_at") / user User @relation(fields: [userId], references: [id], onDelete: Cascade) / @@unique([userId, isCurrent], name: "uq_profiles_user_current") / @@index([userId, isCurrent], name: "idx_profiles_user_current") / @@map("hearing_profiles") / } / model Task { / id            BigInt    @id @default(autoincrement()) / videoId       BigInt    @map("video_id") / userId        BigInt    @map("user_id") / taskType      String    @map("task_type") @db.VarChar(20) / status        String    @default("queued") @db.VarChar(20) / progress      Int       @default(0) @db.SmallInt / stageText     String?   @map("stage_text") @db.VarChar(50) / taskKey       String    @unique @map("task_key") @db.VarChar(120) / retryCount    Int       @default(0) @map("retry_count") @db.SmallInt / triggerSource String    @default("auto") @map("trigger_source") @db.VarChar(20) / errorCode     String?   @map("error_code") @db.VarChar(20) / errorMsg      String?   @map("error_msg") / startedAt     DateTime? @map("started_at") / finishedAt    DateTime? @map("finished_at") / createdAt     DateTime  @default(now()) @map("created_at") / updatedAt     DateTime  @updatedAt @map("updated_at") / video Video @relation(fields: [videoId], references: [id], onDelete: Cascade) / @@index([videoId, taskType], name: "idx_tasks_video_type") / @@index([status, createdAt], name: "idx_tasks_status_created") / @@map("tasks") / } / /* 其余模型（Video / Subtitle / SubtitleSegment / HearingTest / / EnhancementLog / VideoMetric / RemapTask）按第三章数据字典同构定义 */ |
+
+<<END TABLE>>
+[Normal] 图 6-1  Prisma 模型定义核心片段
+[Normal] 七、设计对需求的覆盖检查
+<<TABLE 9 rows x 3 cols>>
+| 需求模块 | 数据表支撑 | 覆盖情况 |
+| 用户管理（FR-01） | users | 完整覆盖 |
+| 听力档案（FR-02） | hearing_profiles | 完整覆盖（多配置并存由 is_current 支持） |
+| 听力自测（FR-03） | hearing_tests + hearing_profiles | 完整覆盖（含环境信息与重复性分析所需字段） |
+| 视频管理（FR-04） | videos | 完整覆盖（含派生文件路径与状态字段） |
+| AI 字幕（FR-05） | tasks + subtitles + subtitle_segments | 完整覆盖（含模型规格与置信度） |
+| 音频增强（FR-06） | enhancement_logs + hearing_profiles | MVP 完整覆盖；离线重映射由 remap_tasks 预留 |
+| 实验评估（FR-07） | enhancement_logs + video_metrics + hearing_tests | 完整覆盖（耗时、参数、评分、重复性） |
+| 系统管理（FR-08） | tasks（状态查询与重试） | 覆盖任务管理；日志落文件不入库 |
+
+<<END TABLE>>
+[Normal] 表 7-1  数据库设计对需求的覆盖检查
+
+================================================================================
+OUTLINE (paragraphs with Heading/Title styles or bold):

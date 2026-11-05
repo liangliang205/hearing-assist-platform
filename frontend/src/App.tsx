@@ -1,55 +1,85 @@
-import { Card, Layout, Menu, Tag, Typography } from 'antd';
-import { useEffect, useState } from 'react';
+import { Button, Layout, Menu, Space, Spin, Typography } from 'antd';
+import type { MenuProps } from 'antd';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './auth/AuthContext';
+import { DashboardPage } from './pages/DashboardPage';
+import { HearingTestPage } from './pages/HearingTestPage';
+import { LoginPage } from './pages/LoginPage';
+import { PreviewPage } from './pages/PreviewPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 const { Header, Content, Sider } = Layout;
 
-export function App() {
-  const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+const MENU_ITEMS: MenuProps['items'] = [
+  { key: '/', label: '工作台' },
+  { key: '/hearing-test', label: '听力自测' },
+  { key: '/profile', label: '听力档案' },
+  { key: '/preview', label: '增强预览' },
+];
 
-  useEffect(() => {
-    fetch('/api/health')
-      .then((response) => {
-        if (!response.ok) throw new Error('Backend health check failed');
-        setBackendStatus('online');
-      })
-      .catch(() => setBackendStatus('offline'));
-  }, []);
+function Shell() {
+  const { user, loading, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <div className="boot">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  const selectedKey = MENU_ITEMS?.some((item) => item?.key === location.pathname)
+    ? location.pathname
+    : '/';
 
   return (
     <Layout className="app-shell">
       <Sider breakpoint="lg" collapsedWidth="0">
-        <div className="brand">听障辅助平台</div>
+        <div className="brand">HearLink</div>
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={['home']}
-          items={[
-            { key: 'home', label: '工作台' },
-            { key: 'hearing', label: '听力自测' },
-            { key: 'videos', label: '视频库' },
-            { key: 'evaluation', label: '实验结果' },
-            { key: 'profile', label: '个人中心' },
-          ]}
+          selectedKeys={[selectedKey]}
+          items={MENU_ITEMS}
+          onClick={({ key }) => navigate(key)}
         />
       </Sider>
       <Layout>
         <Header className="topbar">
-          <Typography.Title level={3}>听障辅助工作台</Typography.Title>
+          <Typography.Text strong>听障辅助平台</Typography.Text>
+          <Space>
+            <Typography.Text type="secondary">
+              {user.nickname || user.username}
+            </Typography.Text>
+            <Button size="small" onClick={() => void logout()}>
+              退出登录
+            </Button>
+          </Space>
         </Header>
         <Content className="content">
-          <Card title="项目初始化完成" extra={<Tag color="blue">开发阶段</Tag>}>
-            <Typography.Paragraph>
-              平台将整合听力自测、AI 视频字幕和个性化音频增强能力。
-            </Typography.Paragraph>
-            <Typography.Paragraph>
-              业务后端状态：
-              <Tag color={backendStatus === 'online' ? 'green' : backendStatus === 'offline' ? 'red' : 'gold'}>
-                {backendStatus === 'online' ? '在线' : backendStatus === 'offline' ? '离线' : '检查中'}
-              </Tag>
-            </Typography.Paragraph>
-          </Card>
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/hearing-test" element={<HearingTestPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/preview" element={<PreviewPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </Content>
       </Layout>
     </Layout>
+  );
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <Shell />
+    </AuthProvider>
   );
 }

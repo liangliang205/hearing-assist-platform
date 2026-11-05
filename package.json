@@ -8,7 +8,15 @@
     "dev:ai": "python -m uvicorn app.main:app --reload --app-dir ai-service",
     "build": "pnpm --filter hearing-assist-frontend build && pnpm --filter hearing-assist-backend build",
     "typecheck": "pnpm --filter hearing-assist-frontend typecheck && pnpm --filter hearing-assist-backend typecheck",
+    "test": "pnpm --filter hearing-assist-backend test",
+    "smoke": "node scripts/smoke.mjs",
     "db:generate": "pnpm --filter hearing-assist-backend db:generate",
     "db:migrate": "pnpm --filter hearing-assist-backend db:migrate"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "18.3.12",
+      "@types/react-dom": "18.3.1"
+    }
   }
 }
