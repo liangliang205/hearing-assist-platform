@@ -12,8 +12,69 @@ importers:
 
   .: {}
 
-  backend:
+  apps/desktop:
     dependencies:
+      '@hearlink/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@tauri-apps/api':
+        specifier: ^2
+        version: 2.12.4
+      antd:
+        specifier: ^5.22.5
+        version: 5.29.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      echarts:
+        specifier: ^5.5.1
+        version: 5.6.0
+      echarts-for-react:
+        specifier: ^3.0.2
+        version: 3.0.6(echarts@5.6.0)(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-router-dom:
+        specifier: ^7.1.1
+        version: 7.18.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+    devDependencies:
+      '@tauri-apps/cli':
+        specifier: ^2
+        version: 2.12.4
+      '@types/react':
+        specifier: 18.3.12
+        version: 18.3.12
+      '@types/react-dom':
+        specifier: 18.3.1
+        version: 18.3.1
+      '@vitejs/plugin-react':
+        specifier: ^4.3.4
+        version: 4.7.0(vite@6.4.4(@types/node@22.20.5)(jiti@2.7.0)(tsx@4.23.15))
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.5
+        version: 6.4.4(@types/node@22.20.5)(jiti@2.7.0)(tsx@4.23.15)
+
+  packages/domain:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.20.5
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  services/server:
+    dependencies:
+      '@hearlink/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@prisma/client':
         specifier: ^6.1.0
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
@@ -51,52 +112,9 @@ importers:
       prisma:
         specifier: ^6.1.0
         version: 6.19.3(typescript@5.9.3)
-      tsx:
-        specifier: ^4.23.15
-        version: 4.23.15
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
-
-  frontend:
-    dependencies:
-      antd:
-        specifier: ^5.22.5
-        version: 5.29.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      echarts:
-        specifier: ^5.5.1
-        version: 5.6.0
-      echarts-for-react:
-        specifier: ^3.0.2
-        version: 3.0.6(echarts@5.6.0)(react@18.3.1)
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      react-router-dom:
-        specifier: ^7.1.1
-        version: 7.18.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      video.js:
-        specifier: ^8.21.0
-        version: 8.24.1
-    devDependencies:
-      '@types/react':
-        specifier: 18.3.12
-        version: 18.3.12
-      '@types/react-dom':
-        specifier: 18.3.1
-        version: 18.3.1
-      '@vitejs/plugin-react':
-        specifier: ^4.3.4
-        version: 4.7.0(vite@6.4.4(@types/node@22.20.5)(jiti@2.7.0)(tsx@4.23.15))
-      typescript:
-        specifier: ^5.7.2
-        version: 5.9.3
-      vite:
-        specifier: ^6.0.5
-        version: 6.4.4(@types/node@22.20.5)(jiti@2.7.0)(tsx@4.23.15)
 
 packages:
 
@@ -980,6 +998,80 @@ packages:
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
 
+  '@tauri-apps/api@2.12.4':
+    resolution: {integrity: sha512-pVmfis+4zT8H0Qhp3xPZx9Ju7kpzvA6rr/PSJPyuwfvucTQ8sVt61NYU9KMkK703UFlYadFmjKA4HhybOtN0gg==}
+
+  '@tauri-apps/cli-darwin-arm64@2.12.4':
+    resolution: {integrity: sha512-OxqKSckIkoJ6vX2AjifIJpTasFC0Hbdoo7gEiCmAjauABO3U8m2MRsLWe+QTiBwDx1mIrvgA+rvI7tvDnbnHVg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@tauri-apps/cli-darwin-x64@2.12.4':
+    resolution: {integrity: sha512-fz76/77wMMJOaaUN6n3CybRG0P/MTEjjqYk81mGPyhi9m6Ue5T+LWBnJP/AkPooNatBPI2vtulGqomyMJ44lCQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@tauri-apps/cli-linux-arm-gnueabihf@2.12.4':
+    resolution: {integrity: sha512-K0w8Bof6Lt8QKLAYhRy0yy36ZH5iA/35VuSOvnxyjvCUZ+A3JKsUTlALviH/sVgAlisaPzzmeJSH8XOn4Q2HBA==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [linux]
+
+  '@tauri-apps/cli-linux-arm64-gnu@2.12.4':
+    resolution: {integrity: sha512-j5rOnjmRUwWrm1oosf0zBYl4D+fqydgUROFCk0hvKZxvbTT8SOERes0QB7rBV/XWNy+kM6pCKzb3oSm2sRglzg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@tauri-apps/cli-linux-arm64-musl@2.12.4':
+    resolution: {integrity: sha512-aOue3Fy6Jb7+oWcfAVUsVHfeTybSCt2CZoU06aO4jv4d2Ks/KnaTPwMAK3CLEduGOvBLY1lbBBrIyomqLLH5Sg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@tauri-apps/cli-linux-riscv64-gnu@2.12.4':
+    resolution: {integrity: sha512-Fx6GShY/RvST+t6LMlTHAwd66+1tEaAAGrnU7cysVfaiRP1BKng5Vl6rVmO6rSLOA1Sp1dRzNYM4f0OWQGb7qA==}
+    engines: {node: '>= 10'}
+    cpu: [riscv64]
+    os: [linux]
+
+  '@tauri-apps/cli-linux-x64-gnu@2.12.4':
+    resolution: {integrity: sha512-tNzZSa79Z1nRpHxEpQ38lsAFpKlFlYvoXzjTV+lRRn/zSf3wrdUC3wnLcq2XEadchPu4ttK0zivhYzr+XGD19Q==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@tauri-apps/cli-linux-x64-musl@2.12.4':
+    resolution: {integrity: sha512-jmZ1pr0xEqUhuEusWtt9Yt+GF6lCnGHUmIL+KIknpbjK/XQ2qkhDBhaxK/JMHM2A8dAacVXCxXJk2EXpwhQUfA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@tauri-apps/cli-win32-arm64-msvc@2.12.4':
+    resolution: {integrity: sha512-fGo8pgEHZxdSYgZ/J98m1usJ7NHKmKbq7k6uT0x1rpOq6Bg2YVzzpaAblWk710f5LHYBJIL5QIFS5IrD+4gmTg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@tauri-apps/cli-win32-ia32-msvc@2.12.4':
+    resolution: {integrity: sha512-ezl8sQIcjYsye3TUnTH5VcWmWzccZASlQm7hlZt0dYyj1XD0qpVW47u2xYVrIKui0F8uQv/7QGZixdWiClBsbg==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+
+  '@tauri-apps/cli-win32-x64-msvc@2.12.4':
+    resolution: {integrity: sha512-DJhDeCqjLDNMWYFy7ZS8cfeAHX2RK0RbQMLiA3bMVVkXRDJ4NBYiHriGqsUhsr9iG41aTb+dJGkFPmPw1gWwVw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@tauri-apps/cli@2.12.4':
+    resolution: {integrity: sha512-JI9bHfudSRJikGOrjbXEm6RjzzvmKuLc+JixB1NE8hNzQkNlCCIC3pTES3uypkR9lxHrsbxzcnSwhI2IxBQphw==}
+    engines: {node: '>= 10'}
+    hasBin: true
+
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
 
@@ -1007,31 +1099,11 @@ packages:
   '@types/react@18.3.12':
     resolution: {integrity: sha512-D2wOSq/d6Agt28q7rSI3jhU7G6aiuzljDGZ2hTZHIkrTLUI+AF3WMeKkEZ9nN2fkBAlcktT6vcZjDFiIhMYEQw==}
 
-  '@videojs/http-streaming@3.17.5':
-    resolution: {integrity: sha512-PRRQVu0hYW5h0XvRWpIyIpEatpMZzZtf7L1avV89Hnu+69f+0c7oLsSL9jwpg2nbvzGkdX5rQxQkz5Vc7tFR9w==}
-    engines: {node: '>=8', npm: '>=5'}
-    peerDependencies:
-      video.js: ^8.19.0
-
-  '@videojs/vhs-utils@4.1.2':
-    resolution: {integrity: sha512-1Dsv5dtWOq0LP1G37O46FQFA2tKAZON5UMe6dFPxT7JvPhEx8QIXcFQxan8+hHI3fX6aomFRFrUBJNgRYQDSXA==}
-    engines: {node: '>=8', npm: '>=5'}
-
-  '@videojs/xhr@2.7.0':
-    resolution: {integrity: sha512-giab+EVRanChIupZK7gXjHy90y3nncA2phIOyG3Ne5fvpiMJzvqYwiTOnEVW2S4CoYcuKJkomat7bMXA/UoUZQ==}
-
   '@vitejs/plugin-react@4.7.0':
     resolution: {integrity: sha512-gUu9hwfWvvEDBBmgtAowQCojwZmJ5mcLn3aufeCsitijs3+f2NsrPtlAWIR6OPiqljl96GVCUbLe0HyqIpVaoA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0
-
-  '@xmldom/xmldom@0.8.15':
-    resolution: {integrity: sha512-/5NV/vDALVFDXgLmfsy9TRCBlKwO2LNBFzpzvb9iIj+jR+eSc6DLYYvVOdivT/jm7MtU6TebYuRmzEOI7w40UA==}
-    engines: {node: '>=10.0.0'}
-
-  aes-decrypter@4.0.2:
-    resolution: {integrity: sha512-lc+/9s6iJvuaRe5qDlMTpCFjnwpkeOXp8qP3oiZ5jsj1MRg+SBVUmmICrhxHvc8OELSmc+fEyyxAuppY6hrWzw==}
 
   antd@5.29.3:
     resolution: {integrity: sha512-3DdbGCa9tWAJGcCJ6rzR8EJFsv2CtyEbkVabZE14pfgUHfCicWCj0/QzQVLDYg8CPfQk9BH7fHCoTXHTy7MP/A==}
@@ -1136,9 +1208,6 @@ packages:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
 
-  dom-walk@0.1.2:
-    resolution: {integrity: sha512-6QvTW9mrGeIegrFXdtQi9pk7O/nSK6lSdXW2eqUspN5LWD7UTji2Fqw5V2YLjBpHEoU9Xl/eUWNpDeZvoyOv2w==}
-
   dotenv-cli@8.0.0:
     resolution: {integrity: sha512-aLqYbK7xKOiTMIRf1lDPbI+Y+Ip/wo5k3eyp6ePysVaSqbyxjyK3dK35BTxG+rmd7djf5q2UPs4noPNH+cj0Qw==}
     hasBin: true
@@ -1216,12 +1285,6 @@ packages:
     resolution: {integrity: sha512-L5bGsVkxJbJgdnwyuheIunkGatUF/zssUoxxjACCseZYAVbaqdh9Tsmmlkl8vYan09H7sbvKt4pS8GqKLBrEzA==}
     hasBin: true
 
-  global@4.4.0:
-    resolution: {integrity: sha512-wv/LAoHdRE3BeTGz53FAamhGlPLhlssK45usmGFThIi4XqnBmjKQ16u+RNbP7WvigRZDxUsM0J3gcQ5yicaL0w==}
-
-  is-function@1.0.2:
-    resolution: {integrity: sha512-lw7DUp0aWXYg+CBCN+JKkcE0Q2RayZnSvnZBlwgxHBQhqt5pZNVy4Ri7H9GmmXkdu7LUthszM+Tor1u/2iBcpQ==}
-
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
@@ -1255,26 +1318,11 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
-  m3u8-parser@7.2.0:
-    resolution: {integrity: sha512-CRatFqpjVtMiMaKXxNvuI3I++vUumIXVVT/JpCpdU/FynV/ceVw1qpPyyBNindL+JlPMSesx+WX1QJaZEJSaMQ==}
-
-  min-document@2.19.2:
-    resolution: {integrity: sha512-8S5I8db/uZN8r9HSLFVWPdJCvYOejMcEC82VIzNUc6Zkklf/d1gg2psfE79/vyhWOj4+J8MtwmoOz3TmvaGu5A==}
-
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
 
-  mpd-parser@1.4.0:
-    resolution: {integrity: sha512-blbA7XpAaOdC/PR0Tu8GiUxlx6CpBuRowQPYV7lhi9Yr9G9+dkPXIUjqjzc/NCn/uZZPopluaJlIYntIEI/VLw==}
-    hasBin: true
-
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
-
-  mux.js@7.1.0:
-    resolution: {integrity: sha512-NTxawK/BBELJrYsZThEulyUMDVlLizKdxyAsMuzoCD1eFj97BVaA8D/CvKsKu6FOLYkFojN5CbM9h++ZTZtknA==}
-    engines: {node: '>=8', npm: '>=5'}
-    hasBin: true
 
   nanoid@3.3.20:
     resolution: {integrity: sha512-uKdg2G3GNCKQn9byYOpxbGqrT2fGO5KRt5J/8b3pok8rT6qxGWF6hxMyJiEYtAf+FVyYuD9hRaDqX5uPFYJ4ZQ==}
@@ -1334,10 +1382,6 @@ packages:
     resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
     engines: {node: '>=12'}
 
-  pkcs7@1.0.4:
-    resolution: {integrity: sha512-afRERtHn54AlwaF2/+LFszyAANTCggGilmcmILUzEjvs3XgFZT+xE6+QWQcAGmu4xajy+Xtj7acLOPdx5/eXWQ==}
-    hasBin: true
-
   pkg-types@2.3.3:
     resolution: {integrity: sha512-j/lCFdcppV0JxWpCEITdbDltBxPP6cHT+yNJ6Go2OgoSA9518X847X9z0p6LtA4Nc16+eQzCZjRrWanTGvHJ5w==}
 
@@ -1358,10 +1402,6 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
-
-  process@0.11.10:
-    resolution: {integrity: sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==}
-    engines: {node: '>= 0.6.0'}
 
   pure-rand@6.1.0:
     resolution: {integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==}
@@ -1754,21 +1794,6 @@ packages:
     hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
-
-  video.js@8.24.1:
-    resolution: {integrity: sha512-Qh2WxVyiw6BEvpS95KCoZM8wt10r2iDvembOjHPftVcxY4QR53WVTDQlJEuI1J46Yo9Zw+6rRDIe62C+J+edfQ==}
-
-  videojs-contrib-quality-levels@4.1.0:
-    resolution: {integrity: sha512-TfrXJJg1Bv4t6TOCMEVMwF/CoS8iENYsWNKip8zfhB5kTcegiFYezEA0eHAJPU64ZC8NQbxQgOwAsYU8VXbOWA==}
-    engines: {node: '>=16', npm: '>=8'}
-    peerDependencies:
-      video.js: ^8
-
-  videojs-font@4.2.0:
-    resolution: {integrity: sha512-YPq+wiKoGy2/M7ccjmlvwi58z2xsykkkfNMyIg4xb7EZQQNwB71hcSsB3o75CqQV7/y5lXkXhI/rsGAS7jfEmQ==}
-
-  videojs-vtt.js@0.15.5:
-    resolution: {integrity: sha512-yZbBxvA7QMYn15Lr/ZfhhLPrNpI/RmCSCqgIff57GC2gIrV5YfyzLfLyZMj0NnZSAz8syB4N0nHXpZg9MyrMOQ==}
 
   vite@6.4.4:
     resolution: {integrity: sha512-xGjU/SyjeNyb0E4KxXBvYz/1C+3JXuujvf2hXNOtnlcE+58o5ajd9N2/n2VhkiJvpCP2qQasnUpx5PXNeI+p1Q==}
@@ -2494,6 +2519,55 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@tauri-apps/api@2.12.4': {}
+
+  '@tauri-apps/cli-darwin-arm64@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-darwin-x64@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-linux-arm-gnueabihf@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-linux-arm64-gnu@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-linux-arm64-musl@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-linux-riscv64-gnu@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-linux-x64-gnu@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-linux-x64-musl@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-win32-arm64-msvc@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-win32-ia32-msvc@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-win32-x64-msvc@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli@2.12.4':
+    optionalDependencies:
+      '@tauri-apps/cli-darwin-arm64': 2.12.4
+      '@tauri-apps/cli-darwin-x64': 2.12.4
+      '@tauri-apps/cli-linux-arm-gnueabihf': 2.12.4
+      '@tauri-apps/cli-linux-arm64-gnu': 2.12.4
+      '@tauri-apps/cli-linux-arm64-musl': 2.12.4
+      '@tauri-apps/cli-linux-riscv64-gnu': 2.12.4
+      '@tauri-apps/cli-linux-x64-gnu': 2.12.4
+      '@tauri-apps/cli-linux-x64-musl': 2.12.4
+      '@tauri-apps/cli-win32-arm64-msvc': 2.12.4
+      '@tauri-apps/cli-win32-ia32-msvc': 2.12.4
+      '@tauri-apps/cli-win32-x64-msvc': 2.12.4
+
   '@types/babel__core@7.20.5':
     dependencies:
       '@babel/parser': 7.29.9
@@ -2532,28 +2606,6 @@ snapshots:
       '@types/prop-types': 15.7.15
       csstype: 3.2.3
 
-  '@videojs/http-streaming@3.17.5(video.js@8.24.1)':
-    dependencies:
-      '@babel/runtime': 7.29.10
-      '@videojs/vhs-utils': 4.1.2
-      aes-decrypter: 4.0.2
-      global: 4.4.0
-      m3u8-parser: 7.2.0
-      mpd-parser: 1.4.0
-      mux.js: 7.1.0
-      video.js: 8.24.1
-
-  '@videojs/vhs-utils@4.1.2':
-    dependencies:
-      '@babel/runtime': 7.29.10
-      global: 4.4.0
-
-  '@videojs/xhr@2.7.0':
-    dependencies:
-      '@babel/runtime': 7.29.10
-      global: 4.4.0
-      is-function: 1.0.2
-
   '@vitejs/plugin-react@4.7.0(vite@6.4.4(@types/node@22.20.5)(jiti@2.7.0)(tsx@4.23.15))':
     dependencies:
       '@babel/core': 7.29.7
@@ -2565,15 +2617,6 @@ snapshots:
       vite: 6.4.4(@types/node@22.20.5)(jiti@2.7.0)(tsx@4.23.15)
     transitivePeerDependencies:
       - supports-color
-
-  '@xmldom/xmldom@0.8.15': {}
-
-  aes-decrypter@4.0.2:
-    dependencies:
-      '@babel/runtime': 7.29.10
-      '@videojs/vhs-utils': 4.1.2
-      global: 4.4.0
-      pkcs7: 1.0.4
 
   antd@5.29.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
@@ -2715,8 +2758,6 @@ snapshots:
   detect-libc@2.1.2:
     optional: true
 
-  dom-walk@0.1.2: {}
-
   dotenv-cli@8.0.0:
     dependencies:
       cross-spawn: 7.0.6
@@ -2835,13 +2876,6 @@ snapshots:
       nypm: 0.6.10
       pathe: 2.0.3
 
-  global@4.4.0:
-    dependencies:
-      min-document: 2.19.2
-      process: 0.11.10
-
-  is-function@1.0.2: {}
-
   isexe@2.0.0: {}
 
   jiti@2.7.0: {}
@@ -2866,31 +2900,9 @@ snapshots:
     dependencies:
       yallist: 3.1.1
 
-  m3u8-parser@7.2.0:
-    dependencies:
-      '@babel/runtime': 7.29.10
-      '@videojs/vhs-utils': 4.1.2
-      global: 4.4.0
-
-  min-document@2.19.2:
-    dependencies:
-      dom-walk: 0.1.2
-
   minimist@1.2.8: {}
 
-  mpd-parser@1.4.0:
-    dependencies:
-      '@babel/runtime': 7.29.10
-      '@videojs/vhs-utils': 4.1.2
-      '@xmldom/xmldom': 0.8.15
-      global: 4.4.0
-
   ms@2.1.3: {}
-
-  mux.js@7.1.0:
-    dependencies:
-      '@babel/runtime': 7.29.10
-      global: 4.4.0
 
   nanoid@3.3.20: {}
 
@@ -2940,10 +2952,6 @@ snapshots:
 
   picomatch@4.0.7: {}
 
-  pkcs7@1.0.4:
-    dependencies:
-      '@babel/runtime': 7.29.10
-
   pkg-types@2.3.3:
     dependencies:
       confbox: 0.3.1
@@ -2970,8 +2978,6 @@ snapshots:
       typescript: 5.9.3
     transitivePeerDependencies:
       - magicast
-
-  process@0.11.10: {}
 
   pure-rand@6.1.0: {}
 
@@ -3470,32 +3476,6 @@ snapshots:
       browserslist: 4.29.3
       escalade: 3.2.0
       picocolors: 1.1.1
-
-  video.js@8.24.1:
-    dependencies:
-      '@babel/runtime': 7.29.10
-      '@videojs/http-streaming': 3.17.5(video.js@8.24.1)
-      '@videojs/vhs-utils': 4.1.2
-      '@videojs/xhr': 2.7.0
-      aes-decrypter: 4.0.2
-      global: 4.4.0
-      m3u8-parser: 7.2.0
-      mpd-parser: 1.4.0
-      mux.js: 7.1.0
-      videojs-contrib-quality-levels: 4.1.0(video.js@8.24.1)
-      videojs-font: 4.2.0
-      videojs-vtt.js: 0.15.5
-
-  videojs-contrib-quality-levels@4.1.0(video.js@8.24.1):
-    dependencies:
-      global: 4.4.0
-      video.js: 8.24.1
-
-  videojs-font@4.2.0: {}
-
-  videojs-vtt.js@0.15.5:
-    dependencies:
-      global: 4.4.0
 
   vite@6.4.4(@types/node@22.20.5)(jiti@2.7.0)(tsx@4.23.15):
     dependencies:

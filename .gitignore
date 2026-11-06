@@ -9,3 +9,7 @@ __pycache__/
 *.log
 uploads/
 *.tsbuildinfo
+
+# Rust 音频引擎的构建产物与自测输出（Cargo.lock 保留，二进制项目应纳入版本控制）
+rust/hearlink-audio/target/
+rust/hearlink-audio/*.wav

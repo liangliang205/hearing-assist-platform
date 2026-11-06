@@ -1,0 +1,2 @@
+set DisableProtectedAudioDG=1
+audiosrv restarted

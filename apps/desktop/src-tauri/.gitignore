@@ -1,0 +1,6 @@
+# Rust 构建产物
+/target
+/gen
+
+# sidecar 引擎由脚本从 rust/hearlink-audio/target 复制，不入库
+/binaries/

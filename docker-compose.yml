@@ -1,3 +1,6 @@
+# 桌面端离线优先，不需要任何服务端依赖。
+# 这里的 PostgreSQL 仅供「服务端联机功能」（账号同步 / 深度分析）使用，
+# 只做本地开发与桌面端时可以不启动。
 services:
   postgres:
     image: postgres:16-alpine
@@ -9,24 +12,10 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    profiles: ["server"]
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-
-  object-storage:
-    image: chrislusf/seaweedfs:latest
-    command: server -dir=/data -s3 -s3.port=9000
-    ports:
-      - "9000:9000"
-      - "9001:9333"
-    volumes:
-      - object-storage-data:/data
-
+# 已移除：
+# - redis：当前无任何代码使用（任务队列未实现）
+# - SeaweedFS / MinIO：MVP 使用本地文件，不需要对象存储
 volumes:
   postgres-data:
-  redis-data:
-  object-storage-data:

@@ -1,0 +1,8 @@
+whoami: 凉凉的台式机\liang
+IL: Mandatory Label\High Mandatory Level 标签   S-1-16-12288
+CLSID root => OK
+CLSID InProc => OK
+AudioEngine => OK
+MMDevices FX => FAIL: 不允许所请求的注册表访问权。
+SOFTWARE test => OK
+Restart audiosrv => OK

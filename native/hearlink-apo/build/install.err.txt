@@ -1,0 +1,8 @@
+System.Security.SecurityException: 不允许所请求的注册表访问权。
+   在 System.ThrowHelper.ThrowSecurityException(ExceptionResource resource)
+   在 Microsoft.Win32.RegistryKey.OpenSubKey(String name, Boolean writable)
+   在 Microsoft.PowerShell.Commands.RegistryWrapper.OpenSubKey(String name, Boolean writable)
+   在 Microsoft.PowerShell.Commands.RegistryProvider.GetRegkeyForPath(String path, Boolean writeAccess)
+   在 Microsoft.PowerShell.Commands.RegistryProvider.GetRegkeyForPathWriteIfError(String path, Boolean writeAccess)
+失败的程序集的区域是:
+MyComputer

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-05T05:33:23.986Z",
+  "generatedAt": "2026-11-05T11:41:00.804Z",
   "ears": {
     "LEFT": {
       "ear": "LEFT",
@@ -10,27 +10,27 @@
       },
       "eqBands": [
         {
-          "q": 1,
+          "q": 1.4,
           "type": "peaking",
-          "gainDb": 5,
+          "gainDb": 2.5,
           "frequency": 500
         },
         {
-          "q": 1,
+          "q": 1.4,
           "type": "peaking",
           "gainDb": 0,
           "frequency": 1000
         },
         {
-          "q": 1,
+          "q": 1.4,
           "type": "peaking",
-          "gainDb": 5,
+          "gainDb": 1.5,
           "frequency": 2000
         },
         {
-          "q": 1,
+          "q": 1.4,
           "type": "peaking",
-          "gainDb": 5,
+          "gainDb": 4.5,
           "frequency": 4000
         }
       ],
@@ -75,8 +75,8 @@
         "releaseMs": 250,
         "thresholdDb": -24
       },
-      "generatedAt": "2026-11-05T05:33:23.831Z",
-      "sourceTestId": "805e9b98-924b-4503-af5d-aad835a955ed"
+      "generatedAt": "2026-11-05T11:41:00.652Z",
+      "sourceTestId": "cb346d77-25c8-4a2f-89d3-2fb42acaa775"
     },
     "RIGHT": {
       "ear": "RIGHT",
@@ -86,39 +86,39 @@
       },
       "eqBands": [
         {
-          "q": 1,
+          "q": 1.4,
           "type": "peaking",
-          "gainDb": 10,
+          "gainDb": 10.5,
           "frequency": 250
         },
         {
-          "q": 1,
+          "q": 1.4,
           "type": "peaking",
-          "gainDb": 20,
+          "gainDb": 21,
           "frequency": 500
         },
         {
-          "q": 1,
+          "q": 1.4,
           "type": "peaking",
-          "gainDb": 5,
+          "gainDb": 0.5,
           "frequency": 1000
         },
         {
-          "q": 1,
+          "q": 1.4,
           "type": "peaking",
-          "gainDb": 15,
+          "gainDb": 12.5,
           "frequency": 2000
         },
         {
-          "q": 1,
+          "q": 1.4,
           "type": "peaking",
-          "gainDb": 24,
+          "gainDb": 16,
           "frequency": 4000
         },
         {
-          "q": 1,
+          "q": 1.4,
           "type": "peaking",
-          "gainDb": 24,
+          "gainDb": 32.5,
           "frequency": 8000
         }
       ],
@@ -175,8 +175,8 @@
         "releaseMs": 250,
         "thresholdDb": -24
       },
-      "generatedAt": "2026-11-05T05:33:23.973Z",
-      "sourceTestId": "b54c00ff-5d15-47a4-87dd-3fb005e9742a"
+      "generatedAt": "2026-11-05T11:41:00.786Z",
+      "sourceTestId": "a1dfb04c-81c9-4131-9ed5-8a9663c11092"
     }
   },
   "overallGrade": {

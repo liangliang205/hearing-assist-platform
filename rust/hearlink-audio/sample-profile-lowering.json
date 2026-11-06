@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "ears": {
+    "LEFT": {
+      "eqBands": [
+        { "frequency": 500, "gainDb": 5, "q": 1 },
+        { "frequency": 1000, "gainDb": 0, "q": 1 },
+        { "frequency": 2000, "gainDb": 5, "q": 1 },
+        { "frequency": 4000, "gainDb": 5, "q": 1 }
+      ],
+      "preGainDb": 0
+    },
+    "RIGHT": {
+      "eqBands": [
+        { "frequency": 500, "gainDb": 10, "q": 1 },
+        { "frequency": 1000, "gainDb": 5, "q": 1 },
+        { "frequency": 2000, "gainDb": 15, "q": 1 },
+        { "frequency": 4000, "gainDb": 15, "q": 1 }
+      ],
+      "preGainDb": -6
+    }
+  },
+  "frequencyLowering": {
+    "enabled": true,
+    "shiftHz": 2000,
+    "fmin": 4000,
+    "fmax": 8000,
+    "note": "示例：把 4000–8000 Hz 整体下移 2000 Hz，供 lowering-test 与实时链路使用"
+  }
+}

@@ -1,0 +1,188 @@
+:root {
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, -apple-system, Segoe UI, sans-serif;
+  color: #1f2937;
+  background: #f5f6f8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  /* 页面本身不滚动，滚动交给内容区 */
+  overflow: hidden;
+}
+
+/* 整个应用固定视口高度，侧栏与顶栏不随内容滚动 */
+.app-shell {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 左侧栏：固定高度，内部（菜单）单独滚动 */
+.app-sider {
+  height: 100vh;
+  border-right: 1px solid #eceef2;
+  overflow: hidden;
+}
+
+.app-sider .ant-layout-sider-children {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* 右侧主区域：竖向三段式（顶栏 / 内容 / 状态栏） */
+.app-main {
+  height: 100vh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  padding: 18px 18px 10px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: #111827;
+  flex: 0 0 auto;
+}
+
+.brand small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #8a94a6;
+  letter-spacing: 0;
+}
+
+.sider-footer {
+  margin-top: auto;
+  padding: 12px 18px;
+  font-size: 11px;
+  color: #9aa3b2;
+  flex: 0 0 auto;
+}
+
+.topbar {
+  flex: 0 0 52px;
+  height: 52px;
+  line-height: normal;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: #fff;
+  border-bottom: 1px solid #eceef2;
+  z-index: 10;
+}
+
+/* 中间内容区：唯一可滚动区域 */
+.content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  scrollbar-gutter: stable;
+}
+
+.content .ant-card {
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: #d3d8e0;
+  border-radius: 5px;
+  border: 2px solid #f5f6f8;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background: #b9c0cb;
+}
+
+/* 底部状态栏：固定高度 */
+.statusbar {
+  flex: 0 0 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 16px;
+  background: #fff;
+  border-top: 1px solid #eceef2;
+  font-size: 12px;
+  color: #8a94a6;
+}
+
+.statusbar-right {
+  margin-left: auto;
+}
+
+/* 登录页：独立于主壳，居中卡片 */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(160deg, #f5f7fb 0%, #eef2f8 100%);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 12px 32px rgba(16, 24, 40, 0.08);
+}
+
+.auth-brand {
+  padding: 4px 0 12px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: #111827;
+}
+
+.auth-brand small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: #8a94a6;
+  letter-spacing: 0;
+}
+
+.plain-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.plain-list li {
+  margin-bottom: 4px;
+}
+
+.config-json {
+  max-height: 360px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 12px;
+  line-height: 1.6;
+}

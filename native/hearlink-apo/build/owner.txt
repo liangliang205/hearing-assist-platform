@@ -1,0 +1,8 @@
+whoami: 凉凉的台式机\liang
+IL: Mandatory Label\High Mandatory Level 标签   S-1-16-12288
+open endpoint key (read) => OK
+open endpoint key (rw) => FAIL: MethodInvocationException: 使用“2”个参数调用“OpenSubKey”时发生异常:“不允许所请求的注册表访问权。”
+open with TakeOwnership => FAIL: MethodInvocationException: 使用“3”个参数调用“OpenSubKey”时发生异常:“不允许所请求的注册表访问权。”
+set owner to Administrators => FAIL: MethodInvocationException: 使用“3”个参数调用“OpenSubKey”时发生异常:“不允许所请求的注册表访问权。”
+grant Administrators FullControl => FAIL: MethodInvocationException: 使用“3”个参数调用“OpenSubKey”时发生异常:“不允许所请求的注册表访问权。”
+create FxProperties + write value => FAIL: MethodInvocationException: 使用“1”个参数调用“CreateSubKey”时发生异常:“对注册表项“HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Render\{4b10bba8-c788-4503-9200-cbc63c11a893}\FxProperties”的访问被拒绝。”

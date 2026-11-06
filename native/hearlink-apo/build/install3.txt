@@ -1,0 +1,33 @@
+﻿**********************
+Windows PowerShell 脚本开始
+开始时间: 20261106142351
+用户名: 凉凉的台式机\liang
+RunAs 用户: 凉凉的台式机\liang
+配置名称: 
+计算机: 凉凉的台式机 (Microsoft Windows NT 10.0.26200.0)
+主机应用程序: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand UwB0AGEAcgB0AC0AVAByAGEAbgBzAGMAcgBpAHAAdAAgAC0AUABhAHQAaAAgACcARAA6AFwAdwBvAHIAawBzAHAAYQBjAGUAXABoAGUAYQByAGkAbgBnAC0AYQBzAHMAaQBzAHQALQBwAGwAYQB0AGYAbwByAG0AXABuAGEAdABpAHYAZQBcAGgAZQBhAHIAbABpAG4AawAtAGEAcABvAFwAYgB1AGkAbABkAFwAaQBuAHMAdABhAGwAbAAzAC4AdAB4AHQAJwAgAC0ARgBvAHIAYwBlACAAfAAgAE8AdQB0AC0ATgB1AGwAbAA7ACAAdAByAHkAIAB7ACAAJgAgACcARAA6AFwAdwBvAHIAawBzAHAAYQBjAGUAXABoAGUAYQByAGkAbgBnAC0AYQBzAHMAaQBzAHQALQBwAGwAYQB0AGYAbwByAG0AXABuAGEAdABpAHYAZQBcAGgAZQBhAHIAbABpAG4AawAtAGEAcABvAFwAaQBuAHMAdABhAGwAbAAuAHAAcwAxACcAIAB9ACAAYwBhAHQAYwBoACAAewAgACcARQBSAFIATwBSADoAIAAnACAAKwAgACQAXwAuAEUAeABjAGUAcAB0AGkAbwBuAC4AVABvAFMAdAByAGkAbgBnACgAKQAgAH0AOwAgAFMAdABvAHAALQBUAHIAYQBuAHMAYwByAGkAcAB0ACAAfAAgAE8AdQB0AC0ATgB1AGwAbAA=
+进程 ID: 43852
+PSVersion: 5.1.26100.9711
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9711
+BuildVersion: 10.0.26100.9711
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+PS>TerminatingError():“使用“1”个参数调用“CreateSubKey”时发生异常:“对注册表项“HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Render\{4b10bba8-c788-4503-9200-cbc63c11a893}\FxProperties”的访问被拒绝。””
+ERROR: System.Management.Automation.MethodInvocationException: 使用“1”个参数调用“CreateSubKey”时发生异常:“对注册表项“HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Render\{4b10bba8-c788-4503-9200-cbc63c11a893}\FxProperties”的访问被拒绝。” ---> System.UnauthorizedAccessException: 对注册表项“HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Render\{4b10bba8-c788-4503-9200-cbc63c11a893}\FxProperties”的访问被拒绝。
+   在 Microsoft.Win32.RegistryKey.Win32Error(Int32 errorCode, String str)
+   在 Microsoft.Win32.RegistryKey.CreateSubKeyInternal(String subkey, RegistryKeyPermissionCheck permissionCheck, Object registrySecurityObj, RegistryOptions registryOptions)
+   在 Microsoft.Win32.RegistryKey.CreateSubKey(String subkey)
+   在 CallSite.Target(Closure , CallSite , RegistryKey , Object )
+   --- 内部异常堆栈跟踪的结尾 ---
+   在 System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)
+   在 System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)
+   在 System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   在 System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+**********************
+Windows PowerShell 脚本结束
+结束时间: 20261106142352
+**********************

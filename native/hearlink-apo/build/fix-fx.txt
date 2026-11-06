@@ -1,0 +1,15 @@
+user: 凉凉的台式机\liang
+IL: Mandatory Label\High Mandatory Level 标签   S-1-16-12288
+--- {4b10bba8-c788-4503-9200-cbc63c11a893}
+parent  => ok
+fxprop  => ok
+write   => ok
+--- {6ca5ae2c-d859-487c-bc0b-cd027af5d79d}
+parent  => ok
+fxprop  => ok
+write   => ok
+--- {91e11276-b54f-46b2-ac9c-aeba7402ec1c}
+parent  => ok
+fxprop  => ok
+write   => ok
+monitor => restarted audiosrv

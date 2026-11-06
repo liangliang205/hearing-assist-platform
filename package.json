@@ -3,15 +3,24 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "dev:frontend": "pnpm --filter hearing-assist-frontend dev",
-    "dev:backend": "pnpm --filter hearing-assist-backend dev",
-    "dev:ai": "python -m uvicorn app.main:app --reload --app-dir ai-service",
-    "build": "pnpm --filter hearing-assist-frontend build && pnpm --filter hearing-assist-backend build",
-    "typecheck": "pnpm --filter hearing-assist-frontend typecheck && pnpm --filter hearing-assist-backend typecheck",
-    "test": "pnpm --filter hearing-assist-backend test",
+    "dev": "pnpm --filter @hearlink/desktop dev",
+    "dev:all": "pnpm -r --parallel run dev",
+    "dev:desktop": "pnpm --filter @hearlink/desktop dev",
+    "dev:server": "pnpm --filter @hearlink/server dev",
+    "tauri:dev": "pnpm --filter @hearlink/desktop tauri dev",
+    "tauri:build": "pnpm --filter @hearlink/desktop tauri build",
+    "sidecar": "node scripts/build-sidecar.mjs",
+    "build": "pnpm --filter @hearlink/desktop build && pnpm --filter @hearlink/server build",
+    "build:desktop": "pnpm --filter @hearlink/desktop build",
+    "build:server": "pnpm --filter @hearlink/server build",
+    "typecheck": "pnpm --filter @hearlink/domain typecheck && pnpm --filter @hearlink/desktop typecheck && pnpm --filter @hearlink/server typecheck",
+    "test": "pnpm --filter @hearlink/domain test",
+    "test:rust": "cargo test --manifest-path rust/hearlink-audio/Cargo.toml",
     "smoke": "node scripts/smoke.mjs",
-    "db:generate": "pnpm --filter hearing-assist-backend db:generate",
-    "db:migrate": "pnpm --filter hearing-assist-backend db:migrate"
+    "verify:auth": "node scripts/verify-desktop-auth.mjs",
+    "verify:consent": "node scripts/verify-consent.mjs",
+    "db:generate": "pnpm --filter @hearlink/server db:generate",
+    "db:migrate": "pnpm --filter @hearlink/server db:migrate"
   },
   "pnpm": {
     "overrides": {

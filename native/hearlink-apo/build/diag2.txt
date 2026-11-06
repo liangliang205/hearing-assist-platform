@@ -1,0 +1,26 @@
+user: 凉凉的台式机\liang
+IL: Mandatory Label\High Mandatory Level 标签   S-1-16-12288
+COM InProcServer32 exists: True
+  value: C:\ProgramData\HearLink\Apo\HearLinkApo.dll
+AudioEngine key exists: True
+  Flags=14 NumAPOInterfaces=1 APOInterface0={FD7F2B29-24D0-4B5C-B177-592C39F9CA10}
+  FriendlyName=HearLink minimal verification APO
+endpoint {4b10bba8-c788-4503-9200-cbc63c11a893}  fxClsid={8D3F1A2B-5C4E-4F60-9B7A-1E2D3C4B5A69}  disableSysFx=
+endpoint {6ca5ae2c-d859-487c-bc0b-cd027af5d79d}  fxClsid={8D3F1A2B-5C4E-4F60-9B7A-1E2D3C4B5A69}  disableSysFx=
+endpoint {91e11276-b54f-46b2-ac9c-aeba7402ec1c}  fxClsid={8D3F1A2B-5C4E-4F60-9B7A-1E2D3C4B5A69}  disableSysFx=
+audiodg pid=39380 HearLink module loaded: False
+EVT 11/06/2026 14:24:20 [178] 检测到全局用户状态
+EVT 11/06/2026 14:24:14 [180] 已收到 Po AudioStandby 请求
+EVT 11/06/2026 14:22:37 [180] 已收到 Po AudioStandby 请求
+EVT 11/06/2026 10:36:47 [177] 已收到主机锁定通知
+EVT 11/06/2026 10:36:24 [177] 已收到主机锁定通知
+EVT 11/06/2026 10:36:23 [65] MMDevAPI: 音频设备状态已更改
+EVT 11/06/2026 10:36:23 [179] 已收到会话显示通知
+EVT 11/06/2026 10:36:23 [178] 检测到全局用户状态
+EVT 11/06/2026 10:36:22 [65] MMDevAPI: 音频设备状态已更改
+EVT 11/06/2026 10:36:22 [65] MMDevAPI: 音频设备状态已更改
+EVT 11/06/2026 10:36:22 [65] MMDevAPI: 音频设备状态已更改
+EVT 11/06/2026 10:36:22 [65] MMDevAPI: 音频设备状态已更改
+EVT 11/06/2026 10:36:20 [65] MMDevAPI: 音频设备状态已更改
+EVT 11/06/2026 10:36:20 [65] MMDevAPI: 音频设备状态已更改
+EVT 11/06/2026 10:36:19 [65] MMDevAPI: 音频设备状态已更改
